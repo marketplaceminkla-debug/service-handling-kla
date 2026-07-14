@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Search, Pencil, MessageCircle } from "lucide-react";
 import { ageLevel, listTickets, ticketAgeDays, isStuck } from "@/lib/tickets";
 import { listBranches } from "@/lib/branches";
 import { listBrands } from "@/lib/brands";
 import { BulkFollowUpPanel } from "@/components/tickets/BulkFollowUpPanel";
+import { InlineEditTicketRow } from "@/components/tickets/InlineEditTicketRow";
 import {
   KATEGORI_LABEL,
   STATUS_LABEL,
@@ -33,11 +34,9 @@ const AGE_COLORS: Record<string, string> = {
 export function TicketList({
   onNew,
   onSelect,
-  onEdit,
 }: {
   onNew: () => void;
   onSelect: (id: string) => void;
-  onEdit: (id: string) => void;
 }) {
   const [tickets, setTickets] = useState<TicketWithBranch[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -53,6 +52,7 @@ export function TicketList({
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkPanel, setShowBulkPanel] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -260,83 +260,100 @@ export function TicketList({
           </thead>
           <tbody>
             {filtered.map((t) => (
-              <tr
-                key={t.id}
-                onClick={() => onSelect(t.id)}
-                className={cn(
-                  "border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer",
-                  selectedIds.has(t.id) && "bg-yellow-50/60"
-                )}
-              >
-                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(t.id)}
-                    onChange={() => toggleOne(t.id)}
-                    className="rounded border-gray-300"
-                  />
-                </td>
-                <td className="px-4 py-3 font-medium text-gray-900">
-                  {t.no_service}
-                </td>
-                <td className="px-4 py-3 text-gray-600">
-                  {t.branch?.name ?? "-"}
-                </td>
-                <td className="px-4 py-3 text-gray-600">
-                  {t.brand?.name ?? "-"}
-                </td>
-                <td className="px-4 py-3 text-gray-600">
-                  {KATEGORI_LABEL[t.kategori]}
-                </td>
-                <td className="px-4 py-3 text-gray-600">
-                  {t.kode_barang} · {t.serial_number}
-                </td>
-                <td className="px-4 py-3 text-gray-600">
-                  {t.posisi_unit || "-"}
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={cn(
-                      "text-xs font-medium px-2 py-1 rounded",
-                      STATUS_COLORS[t.status]
-                    )}
-                  >
-                    {STATUS_LABEL[t.status]}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  {(() => {
-                    const level = ageLevel(t);
-                    return (
-                      <span
-                        className={cn(
-                          "text-xs font-medium px-2 py-1 rounded",
-                          level ? AGE_COLORS[level] : "text-gray-500"
-                        )}
-                      >
-                        {ticketAgeDays(t)} hari
-                      </span>
-                    );
-                  })()}
-                  {isStuck(t) && (
-                    <span className="ml-2 text-danger font-medium text-xs">
-                      macet
-                    </span>
+              <Fragment key={t.id}>
+                <tr
+                  onClick={() => onSelect(t.id)}
+                  className={cn(
+                    "border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer",
+                    selectedIds.has(t.id) && "bg-yellow-50/60"
                   )}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(t.id);
-                    }}
-                    title="Edit tiket"
-                    className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100"
+                >
+                  <td
+                    className="px-4 py-3"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <Pencil size={15} />
-                  </button>
-                </td>
-              </tr>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(t.id)}
+                      onChange={() => toggleOne(t.id)}
+                      className="rounded border-gray-300"
+                    />
+                  </td>
+                  <td className="px-4 py-3 font-medium text-gray-900">
+                    {t.no_service}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {t.branch?.name ?? "-"}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {t.brand?.name ?? "-"}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {KATEGORI_LABEL[t.kategori]}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {t.kode_barang} · {t.serial_number}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {t.posisi_unit || "-"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={cn(
+                        "text-xs font-medium px-2 py-1 rounded",
+                        STATUS_COLORS[t.status]
+                      )}
+                    >
+                      {STATUS_LABEL[t.status]}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {(() => {
+                      const level = ageLevel(t);
+                      return (
+                        <span
+                          className={cn(
+                            "text-xs font-medium px-2 py-1 rounded",
+                            level ? AGE_COLORS[level] : "text-gray-500"
+                          )}
+                        >
+                          {ticketAgeDays(t)} hari
+                        </span>
+                      );
+                    })()}
+                    {isStuck(t) && (
+                      <span className="ml-2 text-danger font-medium text-xs">
+                        macet
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingId(editingId === t.id ? null : t.id);
+                      }}
+                      title="Edit tiket"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100"
+                    >
+                      <Pencil size={15} />
+                    </button>
+                  </td>
+                </tr>
+                {editingId === t.id && (
+                  <InlineEditTicketRow
+                    ticket={t}
+                    branches={branches}
+                    brands={brands}
+                    colSpan={10}
+                    onCancel={() => setEditingId(null)}
+                    onSaved={() => {
+                      setEditingId(null);
+                      load();
+                    }}
+                  />
+                )}
+              </Fragment>
             ))}
             {filtered.length === 0 && (
               <tr>
