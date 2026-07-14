@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Pencil } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Plus, Search, Pencil, MessageCircle } from "lucide-react";
 import { ageLevel, listTickets, ticketAgeDays, isStuck } from "@/lib/tickets";
 import { listBranches } from "@/lib/branches";
 import { listBrands } from "@/lib/brands";
+import { BulkFollowUpPanel } from "@/components/tickets/BulkFollowUpPanel";
 import {
   KATEGORI_LABEL,
   STATUS_LABEL,
@@ -50,7 +51,11 @@ export function TicketList({
   const [kategoriFilter, setKategoriFilter] = useState<TicketKategori | "">("");
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "">("");
 
-  useEffect(() => {
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkPanel, setShowBulkPanel] = useState(false);
+
+  const load = useCallback(() => {
+    setLoading(true);
     Promise.all([listTickets(), listBranches(), listBrands()])
       .then(([t, b, br]) => {
         setTickets(t);
@@ -60,6 +65,8 @@ export function TicketList({
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(load, [load]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -78,6 +85,36 @@ export function TicketList({
       return true;
     });
   }, [tickets, search, branchFilter, brandFilter, kategoriFilter, statusFilter]);
+
+  const selectedTickets = useMemo(
+    () => tickets.filter((t) => selectedIds.has(t.id)),
+    [tickets, selectedIds]
+  );
+
+  const allFilteredSelected =
+    filtered.length > 0 && filtered.every((t) => selectedIds.has(t.id));
+
+  const toggleAll = () => {
+    setSelectedIds((prev) => {
+      if (allFilteredSelected) {
+        const next = new Set(prev);
+        filtered.forEach((t) => next.delete(t.id));
+        return next;
+      }
+      const next = new Set(prev);
+      filtered.forEach((t) => next.add(t.id));
+      return next;
+    });
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   if (loading) return <p className="text-sm text-gray-400">Memuat tiket...</p>;
   if (error) return <p className="text-sm text-danger">{error}</p>;
@@ -163,10 +200,53 @@ export function TicketList({
         </select>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between bg-yellow-50 border border-brand/40 rounded-xl px-4 py-3 mb-4">
+          <p className="text-sm font-medium text-gray-800">
+            {selectedIds.size} tiket dipilih
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900"
+            >
+              Batal Pilih
+            </button>
+            <button
+              onClick={() => setShowBulkPanel(true)}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-gray-900 bg-brand rounded-lg hover:brightness-95"
+            >
+              <MessageCircle size={15} />
+              Follow Up Terpilih
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showBulkPanel && selectedTickets.length > 0 && (
+        <BulkFollowUpPanel
+          tickets={selectedTickets}
+          onClose={() => setShowBulkPanel(false)}
+          onDone={() => {
+            setShowBulkPanel(false);
+            setSelectedIds(new Set());
+            load();
+          }}
+        />
+      )}
+
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-gray-500 border-b border-gray-100">
+              <th className="px-4 py-3 font-medium w-10">
+                <input
+                  type="checkbox"
+                  checked={allFilteredSelected}
+                  onChange={toggleAll}
+                  className="rounded border-gray-300"
+                />
+              </th>
               <th className="px-4 py-3 font-medium">No. Service</th>
               <th className="px-4 py-3 font-medium">Cabang</th>
               <th className="px-4 py-3 font-medium">Brand</th>
@@ -183,8 +263,19 @@ export function TicketList({
               <tr
                 key={t.id}
                 onClick={() => onSelect(t.id)}
-                className="border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer"
+                className={cn(
+                  "border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer",
+                  selectedIds.has(t.id) && "bg-yellow-50/60"
+                )}
               >
+                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(t.id)}
+                    onChange={() => toggleOne(t.id)}
+                    className="rounded border-gray-300"
+                  />
+                </td>
                 <td className="px-4 py-3 font-medium text-gray-900">
                   {t.no_service}
                 </td>
@@ -249,7 +340,7 @@ export function TicketList({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={10} className="px-4 py-8 text-center text-gray-400">
                   Belum ada tiket.
                 </td>
               </tr>
