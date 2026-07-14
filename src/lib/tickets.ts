@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import type {
+  FollowUpChannel,
   ServiceTicket,
   TicketStatus,
   TicketUpdate,
@@ -7,6 +8,8 @@ import type {
 } from "@/types";
 
 const STUCK_THRESHOLD_DAYS = 3;
+const TICKET_SELECT =
+  "*, branch:branches(id, name, code, wa_number), brand:brands(id, name, wa_number)";
 
 export function ticketAgeDays(ticket: Pick<ServiceTicket, "created_at">) {
   const ms = Date.now() - new Date(ticket.created_at).getTime();
@@ -21,10 +24,18 @@ export function isStuck(
   return ms / (1000 * 60 * 60 * 24) > STUCK_THRESHOLD_DAYS;
 }
 
+export function waLink(rawNumber: string, message: string) {
+  const digits = rawNumber.replace(/[^0-9]/g, "");
+  const withCountryCode = digits.startsWith("0")
+    ? `62${digits.slice(1)}`
+    : digits;
+  return `https://wa.me/${withCountryCode}?text=${encodeURIComponent(message)}`;
+}
+
 export async function listTickets(): Promise<TicketWithBranch[]> {
   const { data, error } = await supabase
     .from("service_tickets")
-    .select("*, branch:branches(id, name, code)")
+    .select(TICKET_SELECT)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data as unknown as TicketWithBranch[];
@@ -33,7 +44,7 @@ export async function listTickets(): Promise<TicketWithBranch[]> {
 export async function getTicket(id: string): Promise<TicketWithBranch> {
   const { data, error } = await supabase
     .from("service_tickets")
-    .select("*, branch:branches(id, name, code)")
+    .select(TICKET_SELECT)
     .eq("id", id)
     .single();
   if (error) throw error;
@@ -43,6 +54,7 @@ export async function getTicket(id: string): Promise<TicketWithBranch> {
 export async function createTicket(input: {
   no_service: string;
   branch_id: string;
+  brand_id?: string | null;
   kategori: "stok" | "user";
   kode_barang: string;
   serial_number: string;
@@ -57,6 +69,7 @@ export async function createTicket(input: {
     .insert({
       no_service: input.no_service,
       branch_id: input.branch_id,
+      brand_id: input.brand_id || null,
       kategori: input.kategori,
       kode_barang: input.kode_barang,
       serial_number: input.serial_number,
@@ -66,6 +79,33 @@ export async function createTicket(input: {
       reported_by: input.reported_by,
       reported_by_name: input.reported_by_name,
     })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as ServiceTicket;
+}
+
+export async function updateTicket(
+  id: string,
+  patch: Partial<
+    Pick<
+      ServiceTicket,
+      | "branch_id"
+      | "brand_id"
+      | "kategori"
+      | "kode_barang"
+      | "serial_number"
+      | "status"
+      | "estimasi"
+      | "posisi_unit"
+      | "keterangan"
+    >
+  >
+): Promise<ServiceTicket> {
+  const { data, error } = await supabase
+    .from("service_tickets")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", id)
     .select("*")
     .single();
   if (error) throw error;
@@ -89,6 +129,7 @@ export async function addFollowUp(input: {
   note: string;
   status_from: TicketStatus;
   status_to: TicketStatus;
+  channel: FollowUpChannel | null;
   created_by: string | null;
   created_by_name: string | null;
 }): Promise<void> {
@@ -97,6 +138,7 @@ export async function addFollowUp(input: {
     note: input.note,
     status_from: input.status_from,
     status_to: input.status_to,
+    channel: input.channel,
     created_by: input.created_by,
     created_by_name: input.created_by_name,
   });

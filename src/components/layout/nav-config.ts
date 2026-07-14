@@ -1,8 +1,22 @@
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, Ticket, Building2, Users } from "lucide-react";
+import {
+  LayoutDashboard,
+  Ticket,
+  Building2,
+  Users,
+  Tags,
+  UploadCloud,
+} from "lucide-react";
 import type { Role } from "@/types";
 
-export type PanelKey = "dashboard" | "tickets" | "master" | "akun";
+export type PanelKey =
+  | "dashboard"
+  | "tickets"
+  | "upload-stok"
+  | "upload-user"
+  | "master-cabang"
+  | "master-brand"
+  | "akun";
 
 export interface NavItem {
   key: PanelKey;
@@ -25,9 +39,27 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["super_admin", "admin", "staff"],
   },
   {
-    key: "master",
+    key: "upload-stok",
+    label: "Upload Servis Stok",
+    icon: UploadCloud,
+    roles: ["super_admin", "admin", "staff"],
+  },
+  {
+    key: "upload-user",
+    label: "Upload Servis User",
+    icon: UploadCloud,
+    roles: ["super_admin", "admin", "staff"],
+  },
+  {
+    key: "master-cabang",
     label: "Master Cabang",
     icon: Building2,
+    roles: ["super_admin"],
+  },
+  {
+    key: "master-brand",
+    label: "Master Brand",
+    icon: Tags,
     roles: ["super_admin"],
   },
   {

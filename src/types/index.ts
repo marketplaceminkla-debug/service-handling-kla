@@ -19,13 +19,23 @@ export interface Branch {
   created_at: string;
 }
 
+export interface Brand {
+  id: string;
+  name: string;
+  wa_number: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
 export type TicketKategori = "stok" | "user";
 export type TicketStatus = "baru" | "diproses" | "tunggu_sparepart" | "selesai";
+export type FollowUpChannel = "cabang" | "brand";
 
 export interface ServiceTicket {
   id: string;
   no_service: string;
   branch_id: string;
+  brand_id: string | null;
   kategori: TicketKategori;
   kode_barang: string;
   serial_number: string;
@@ -41,7 +51,8 @@ export interface ServiceTicket {
 }
 
 export interface TicketWithBranch extends ServiceTicket {
-  branch: Pick<Branch, "id" | "name" | "code"> | null;
+  branch: Pick<Branch, "id" | "name" | "code" | "wa_number"> | null;
+  brand: Pick<Brand, "id" | "name" | "wa_number"> | null;
 }
 
 export interface TicketUpdate {
@@ -50,6 +61,7 @@ export interface TicketUpdate {
   note: string;
   status_from: string | null;
   status_to: string | null;
+  channel: FollowUpChannel | null;
   created_by: string | null;
   created_by_name: string | null;
   created_at: string;

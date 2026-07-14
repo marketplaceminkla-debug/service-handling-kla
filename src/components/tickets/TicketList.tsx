@@ -4,10 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { listTickets, ticketAgeDays, isStuck } from "@/lib/tickets";
 import { listBranches } from "@/lib/branches";
+import { listBrands } from "@/lib/brands";
 import {
   KATEGORI_LABEL,
   STATUS_LABEL,
   type Branch,
+  type Brand,
+  type TicketKategori,
   type TicketStatus,
   type TicketWithBranch,
 } from "@/types";
@@ -29,18 +32,22 @@ export function TicketList({
 }) {
   const [tickets, setTickets] = useState<TicketWithBranch[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState("");
+  const [brandFilter, setBrandFilter] = useState("");
+  const [kategoriFilter, setKategoriFilter] = useState<TicketKategori | "">("");
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "">("");
 
   useEffect(() => {
-    Promise.all([listTickets(), listBranches()])
-      .then(([t, b]) => {
+    Promise.all([listTickets(), listBranches(), listBrands()])
+      .then(([t, b, br]) => {
         setTickets(t);
         setBranches(b);
+        setBrands(br);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -50,6 +57,8 @@ export function TicketList({
     const q = search.trim().toLowerCase();
     return tickets.filter((t) => {
       if (branchFilter && t.branch_id !== branchFilter) return false;
+      if (brandFilter && t.brand_id !== brandFilter) return false;
+      if (kategoriFilter && t.kategori !== kategoriFilter) return false;
       if (statusFilter && t.status !== statusFilter) return false;
       if (
         q &&
@@ -60,7 +69,7 @@ export function TicketList({
         return false;
       return true;
     });
-  }, [tickets, search, branchFilter, statusFilter]);
+  }, [tickets, search, branchFilter, brandFilter, kategoriFilter, statusFilter]);
 
   if (loading) return <p className="text-sm text-gray-400">Memuat tiket...</p>;
   if (error) return <p className="text-sm text-danger">{error}</p>;
@@ -107,6 +116,32 @@ export function TicketList({
           ))}
         </select>
         <select
+          value={brandFilter}
+          onChange={(e) => setBrandFilter(e.target.value)}
+          className="text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+        >
+          <option value="">Semua Brand</option>
+          {brands.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+        <select
+          value={kategoriFilter}
+          onChange={(e) =>
+            setKategoriFilter(e.target.value as TicketKategori | "")
+          }
+          className="text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+        >
+          <option value="">Semua Kategori</option>
+          {Object.entries(KATEGORI_LABEL).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as TicketStatus | "")}
           className="text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
@@ -126,6 +161,7 @@ export function TicketList({
             <tr className="text-left text-gray-500 border-b border-gray-100">
               <th className="px-4 py-3 font-medium">No. Service</th>
               <th className="px-4 py-3 font-medium">Cabang</th>
+              <th className="px-4 py-3 font-medium">Brand</th>
               <th className="px-4 py-3 font-medium">Kategori</th>
               <th className="px-4 py-3 font-medium">Kode Barang</th>
               <th className="px-4 py-3 font-medium">Status</th>
@@ -144,6 +180,9 @@ export function TicketList({
                 </td>
                 <td className="px-4 py-3 text-gray-600">
                   {t.branch?.name ?? "-"}
+                </td>
+                <td className="px-4 py-3 text-gray-600">
+                  {t.brand?.name ?? "-"}
                 </td>
                 <td className="px-4 py-3 text-gray-600">
                   {KATEGORI_LABEL[t.kategori]}
@@ -171,7 +210,7 @@ export function TicketList({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
                   Belum ada tiket.
                 </td>
               </tr>
