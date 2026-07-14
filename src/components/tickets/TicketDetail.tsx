@@ -5,6 +5,7 @@ import { ArrowLeft, MessageCircle, Pencil } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import {
   addFollowUp,
+  buildFollowUpMessage,
   getTicket,
   listTicketUpdates,
   ticketAgeDays,
@@ -179,7 +180,7 @@ export function TicketDetail({
       });
 
       if (channel && target?.wa_number) {
-        const message = `Update Servis ${ticket.no_service}\nUnit: ${ticket.kode_barang}\nCabang: ${ticket.branch?.name ?? "-"}\nStatus: ${STATUS_LABEL[statusTo]}\n\n${note.trim()}`;
+        const message = buildFollowUpMessage(target.name, [ticket], note);
         window.open(waLink(target.wa_number, message), "_blank");
       }
 
