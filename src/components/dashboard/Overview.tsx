@@ -138,13 +138,16 @@ export function Overview() {
                     {b.aktif}
                   </td>
                   <td className="px-5 py-2.5">
-                    {b.urgent > 0 ? (
-                      <span className="text-xs font-medium px-2 py-1 rounded bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300">
-                        {b.urgent}
-                      </span>
-                    ) : (
-                      <span className="text-gray-400 dark:text-gray-500">0</span>
-                    )}
+                    <span
+                      className={cn(
+                        "text-xs font-medium px-2 py-1 rounded",
+                        b.urgent > 0
+                          ? "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                          : "text-gray-400 dark:text-gray-500"
+                      )}
+                    >
+                      {b.urgent}
+                    </span>
                   </td>
                 </tr>
               ))}
