@@ -8,6 +8,7 @@ export interface ParsedTicketRow {
   serial_number: string;
   branch_name: string;
   status_raw: string;
+  lama_hari: string;
   estimasi: string;
   posisi_unit: string;
   keterangan: string;
@@ -31,6 +32,8 @@ const HEADER_ALIASES: Record<string, ColumnKey> = {
   "serial number": "serial_number",
   cabang: "branch_name",
   status: "status_raw",
+  "lama di-service": "lama_hari",
+  "lama di service": "lama_hari",
   est: "estimasi",
   estimasi: "estimasi",
   "posisi unit": "posisi_unit",
@@ -79,6 +82,7 @@ export async function parseExcelFile(file: File): Promise<ParsedTicketRow[]> {
       serial_number: "",
       branch_name: "",
       status_raw: "",
+      lama_hari: "",
       estimasi: "",
       posisi_unit: "",
       keterangan: "",
@@ -102,6 +106,15 @@ function normalizeRequired(value: string): string {
 function normalizeOptional(value: string): string | null {
   const v = value.trim();
   return v === "" || v === "-" ? null : v;
+}
+
+/** Sistem internal export "Lama di-service" sebagai jumlah hari sejak SRV
+ * dibuka — backdate created_at kita biar umur tiket tetap akurat walau
+ * baru pertama kali diimpor ke sini. */
+function createdAtFromLamaHari(raw: string): string | null {
+  const days = parseInt(raw, 10);
+  if (Number.isNaN(days) || days < 0) return null;
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 }
 
 function mapStatus(raw: string): TicketStatus {
@@ -208,7 +221,7 @@ export async function importTickets(
       continue;
     }
 
-    const fields = {
+    const fields: Record<string, unknown> = {
       branch_id: branchId,
       kode_barang: normalizeRequired(row.kode_barang),
       serial_number: normalizeRequired(row.serial_number),
@@ -218,6 +231,8 @@ export async function importTickets(
       keterangan: normalizeOptional(row.keterangan),
       updated_at: new Date().toISOString(),
     };
+    const createdAt = createdAtFromLamaHari(row.lama_hari);
+    if (createdAt) fields.created_at = createdAt;
 
     const existingId = existingMap.get(row.no_service.trim());
     if (existingId) {
