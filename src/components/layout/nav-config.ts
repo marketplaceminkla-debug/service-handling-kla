@@ -4,7 +4,6 @@ import {
   Ticket,
   Building2,
   Users,
-  Tags,
   UploadCloud,
 } from "lucide-react";
 import type { Role } from "@/types";
@@ -13,8 +12,7 @@ export type PanelKey =
   | "dashboard"
   | "tickets"
   | "upload"
-  | "master-cabang"
-  | "master-brand"
+  | "master"
   | "akun";
 
 export interface NavItem {
@@ -44,15 +42,9 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["super_admin", "admin", "staff"],
   },
   {
-    key: "master-cabang",
-    label: "Master Cabang",
+    key: "master",
+    label: "Master Data",
     icon: Building2,
-    roles: ["super_admin"],
-  },
-  {
-    key: "master-brand",
-    label: "Master Brand",
-    icon: Tags,
     roles: ["super_admin"],
   },
   {
