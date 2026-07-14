@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle } from "lucide-react";
-import { listTickets, ticketAgeDays, isStuck } from "@/lib/tickets";
+import { AlertTriangle, Flame } from "lucide-react";
+import { ageLevel, listTickets, ticketAgeDays, isStuck, URGENT_AGE_DAYS } from "@/lib/tickets";
 import { STATUS_LABEL, type TicketWithBranch } from "@/types";
 import { cn, formatDate } from "@/lib/utils";
 
@@ -41,6 +41,7 @@ export function Overview() {
   };
 
   const stuckTickets = tickets.filter((t) => isStuck(t));
+  const urgentTickets = tickets.filter((t) => ageLevel(t) === "urgent");
 
   return (
     <div>
@@ -49,7 +50,7 @@ export function Overview() {
         Ringkasan progres tiket servis semua cabang yang bisa kamu akses.
       </p>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
         {(Object.keys(STATUS_LABEL) as (keyof typeof STATUS_LABEL)[]).map(
           (status) => (
             <div
@@ -62,6 +63,56 @@ export function Overview() {
               </p>
             </div>
           )
+        )}
+        <div className="bg-white rounded-xl border border-red-100 p-5">
+          <p className="text-sm text-red-600">Urgent (&ge;{URGENT_AGE_DAYS}h)</p>
+          <p className="text-2xl font-bold text-red-700 mt-1">
+            {urgentTickets.length}
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 mb-6">
+        <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100">
+          <Flame size={18} className="text-red-500" />
+          <h3 className="font-semibold text-gray-900">
+            Tiket Urgent ({urgentTickets.length})
+          </h3>
+          <span className="text-xs text-gray-400">
+            lama di-service &ge; {URGENT_AGE_DAYS} hari
+          </span>
+        </div>
+
+        {urgentTickets.length === 0 ? (
+          <p className="px-5 py-6 text-sm text-gray-400">
+            Belum ada tiket yang kelamaan di-service. Mantap.
+          </p>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {urgentTickets.map((t) => (
+              <li
+                key={t.id}
+                className="px-5 py-3 flex items-center justify-between text-sm"
+              >
+                <div>
+                  <p className="font-medium text-gray-900">
+                    {t.no_service} — {t.kode_barang}
+                  </p>
+                  <p className="text-gray-500 text-xs mt-0.5">
+                    {t.branch?.name ?? "-"} · Umur {ticketAgeDays(t)} hari
+                  </p>
+                </div>
+                <span
+                  className={cn(
+                    "text-xs font-medium px-2 py-1 rounded",
+                    STATUS_COLORS[t.status]
+                  )}
+                >
+                  {STATUS_LABEL[t.status]}
+                </span>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 

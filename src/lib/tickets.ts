@@ -8,6 +8,8 @@ import type {
 } from "@/types";
 
 const STUCK_THRESHOLD_DAYS = 3;
+export const URGENT_AGE_DAYS = 30;
+export const WARNING_AGE_DAYS = 20;
 const TICKET_SELECT =
   "*, branch:branches(id, name, code, wa_number), brand:brands(id, name, wa_number)";
 
@@ -22,6 +24,19 @@ export function isStuck(
   if (ticket.status === "selesai") return false;
   const ms = Date.now() - new Date(ticket.updated_at).getTime();
   return ms / (1000 * 60 * 60 * 24) > STUCK_THRESHOLD_DAYS;
+}
+
+export type AgeLevel = "urgent" | "warning" | "normal";
+
+/** Lama-di-service urgency tier. Tickets already selesai have no tier. */
+export function ageLevel(
+  ticket: Pick<ServiceTicket, "status" | "created_at">
+): AgeLevel | null {
+  if (ticket.status === "selesai") return null;
+  const days = ticketAgeDays(ticket);
+  if (days >= URGENT_AGE_DAYS) return "urgent";
+  if (days >= WARNING_AGE_DAYS) return "warning";
+  return "normal";
 }
 
 export function waLink(rawNumber: string, message: string) {
