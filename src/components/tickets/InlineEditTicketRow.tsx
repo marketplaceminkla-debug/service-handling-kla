@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { updateTicket } from "@/lib/tickets";
+import { PosisiUnitSelect } from "@/components/tickets/PosisiUnitSelect";
 import {
   STATUS_LABEL,
   type Branch,
@@ -138,11 +139,7 @@ export function InlineEditTicketRow({
             />
           </Field>
           <Field label="Posisi Unit">
-            <input
-              value={posisiUnit}
-              onChange={(e) => setPosisiUnit(e.target.value)}
-              className="input"
-            />
+            <PosisiUnitSelect value={posisiUnit} onChange={setPosisiUnit} />
           </Field>
           <div className="col-span-2 md:col-span-4">
             <Field label="Keterangan">

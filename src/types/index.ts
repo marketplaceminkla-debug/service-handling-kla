@@ -78,3 +78,10 @@ export const KATEGORI_LABEL: Record<TicketKategori, string> = {
   stok: "Stok",
   user: "User",
 };
+
+export const POSISI_UNIT_OPTIONS = [
+  "IPK",
+  "SERVICE CENTER",
+  "SUPPLIER",
+  "CABANG",
+] as const;

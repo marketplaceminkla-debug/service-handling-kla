@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { listBranches } from "@/lib/branches";
 import { listBrands } from "@/lib/brands";
 import { createTicket } from "@/lib/tickets";
+import { PosisiUnitSelect } from "@/components/tickets/PosisiUnitSelect";
 import type { Branch, Brand, TicketKategori } from "@/types";
 
 export function NewTicketForm({
@@ -168,12 +169,7 @@ export function NewTicketForm({
         </div>
 
         <Field label="Posisi Unit">
-          <input
-            value={posisiUnit}
-            onChange={(e) => setPosisiUnit(e.target.value)}
-            placeholder="mis. gudang servis pusat"
-            className="input"
-          />
+          <PosisiUnitSelect value={posisiUnit} onChange={setPosisiUnit} />
         </Field>
 
         <Field label="Keterangan">
