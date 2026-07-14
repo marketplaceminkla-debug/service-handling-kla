@@ -37,8 +37,7 @@ export default function Home() {
       <main className="flex-1 p-8">
         {panel === "dashboard" && <Overview />}
         {panel === "tickets" && <TicketsPanel />}
-        {panel === "upload-stok" && <UploadExcel kategori="stok" />}
-        {panel === "upload-user" && <UploadExcel kategori="user" />}
+        {panel === "upload" && <UploadExcel />}
         {panel === "master-cabang" && <BranchesPanel />}
         {panel === "master-brand" && <BrandsPanel />}
         {panel === "akun" && <KelolaAkun />}

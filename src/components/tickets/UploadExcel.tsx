@@ -12,14 +12,23 @@ import {
 import { KATEGORI_LABEL, type TicketKategori } from "@/types";
 import { cn } from "@/lib/utils";
 
-export function UploadExcel({ kategori }: { kategori: TicketKategori }) {
+export function UploadExcel() {
   const { profile } = useAuth();
+  const [kategori, setKategori] = useState<TicketKategori>("stok");
   const [rows, setRows] = useState<ParsedTicketRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [parsing, setParsing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
+
+  const switchKategori = (next: TicketKategori) => {
+    setKategori(next);
+    setRows([]);
+    setFileName(null);
+    setError(null);
+    setResult(null);
+  };
 
   const handleFile = async (file: File) => {
     setError(null);
@@ -60,13 +69,30 @@ export function UploadExcel({ kategori }: { kategori: TicketKategori }) {
 
   return (
     <div className="max-w-3xl">
-      <h2 className="text-xl font-bold text-gray-900 mb-1">
-        Upload Servis {KATEGORI_LABEL[kategori]}
-      </h2>
-      <p className="text-sm text-gray-500 mb-6">
+      <h2 className="text-xl font-bold text-gray-900 mb-1">Upload Servis</h2>
+      <p className="text-sm text-gray-500 mb-4">
         Upload Excel dari sistem internal. No. Service yang sudah ada bakal
         di-update statusnya, yang belum ada bakal jadi tiket baru.
       </p>
+
+      <div className="inline-flex bg-gray-100 rounded-lg p-1 mb-6">
+        {(Object.entries(KATEGORI_LABEL) as [TicketKategori, string][]).map(
+          ([value, label]) => (
+            <button
+              key={value}
+              onClick={() => switchKategori(value)}
+              className={cn(
+                "px-4 py-2 text-sm font-medium rounded-md transition",
+                kategori === value
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-800"
+              )}
+            >
+              Servis {label}
+            </button>
+          )
+        )}
+      </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
         <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg py-10 cursor-pointer hover:border-brand transition">

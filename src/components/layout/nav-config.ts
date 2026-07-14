@@ -12,8 +12,7 @@ import type { Role } from "@/types";
 export type PanelKey =
   | "dashboard"
   | "tickets"
-  | "upload-stok"
-  | "upload-user"
+  | "upload"
   | "master-cabang"
   | "master-brand"
   | "akun";
@@ -39,14 +38,8 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["super_admin", "admin", "staff"],
   },
   {
-    key: "upload-stok",
-    label: "Upload Servis Stok",
-    icon: UploadCloud,
-    roles: ["super_admin", "admin", "staff"],
-  },
-  {
-    key: "upload-user",
-    label: "Upload Servis User",
+    key: "upload",
+    label: "Upload Servis",
     icon: UploadCloud,
     roles: ["super_admin", "admin", "staff"],
   },
