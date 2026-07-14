@@ -40,9 +40,11 @@ const CHANNEL_LABEL: Record<FollowUpChannel, string> = {
 
 export function TicketDetail({
   ticketId,
+  startInEdit,
   onBack,
 }: {
   ticketId: string;
+  startInEdit?: boolean;
   onBack: () => void;
 }) {
   const { profile } = useAuth();
@@ -71,7 +73,19 @@ export function TicketDetail({
   } | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
 
-  const load = async () => {
+  const toEditState = (t: TicketWithBranch) => ({
+    branch_id: t.branch_id,
+    brand_id: t.brand_id ?? "",
+    kategori: t.kategori,
+    kode_barang: t.kode_barang,
+    serial_number: t.serial_number,
+    status: t.status,
+    estimasi: t.estimasi ?? "",
+    posisi_unit: t.posisi_unit ?? "",
+    keterangan: t.keterangan ?? "",
+  });
+
+  const load = async (openEdit?: boolean) => {
     setLoading(true);
     try {
       const [t, u, b, br] = await Promise.all([
@@ -85,6 +99,10 @@ export function TicketDetail({
       setBranches(b);
       setBrands(br);
       setStatusTo(t.status === "selesai" ? "selesai" : nextStatus(t.status));
+      if (openEdit) {
+        setEdit(toEditState(t));
+        setIsEditing(true);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gagal memuat tiket");
     } finally {
@@ -93,23 +111,13 @@ export function TicketDetail({
   };
 
   useEffect(() => {
-    load();
+    load(startInEdit);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticketId]);
 
   const startEdit = () => {
     if (!ticket) return;
-    setEdit({
-      branch_id: ticket.branch_id,
-      brand_id: ticket.brand_id ?? "",
-      kategori: ticket.kategori,
-      kode_barang: ticket.kode_barang,
-      serial_number: ticket.serial_number,
-      status: ticket.status,
-      estimasi: ticket.estimasi ?? "",
-      posisi_unit: ticket.posisi_unit ?? "",
-      keterangan: ticket.keterangan ?? "",
-    });
+    setEdit(toEditState(ticket));
     setIsEditing(true);
   };
 

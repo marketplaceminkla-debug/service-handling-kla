@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Pencil } from "lucide-react";
 import { listTickets, ticketAgeDays, isStuck } from "@/lib/tickets";
 import { listBranches } from "@/lib/branches";
 import { listBrands } from "@/lib/brands";
@@ -26,9 +26,11 @@ const STATUS_COLORS: Record<string, string> = {
 export function TicketList({
   onNew,
   onSelect,
+  onEdit,
 }: {
   onNew: () => void;
   onSelect: (id: string) => void;
+  onEdit: (id: string) => void;
 }) {
   const [tickets, setTickets] = useState<TicketWithBranch[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -166,6 +168,7 @@ export function TicketList({
               <th className="px-4 py-3 font-medium">Kode Barang</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Lama</th>
+              <th className="px-4 py-3 font-medium"></th>
             </tr>
           </thead>
           <tbody>
@@ -206,11 +209,23 @@ export function TicketList({
                     <span className="ml-2 text-danger font-medium">macet</span>
                   )}
                 </td>
+                <td className="px-4 py-3 text-right">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(t.id);
+                    }}
+                    title="Edit tiket"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100"
+                  >
+                    <Pencil size={15} />
+                  </button>
+                </td>
               </tr>
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
                   Belum ada tiket.
                 </td>
               </tr>
