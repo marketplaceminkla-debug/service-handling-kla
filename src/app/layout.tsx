@@ -3,8 +3,8 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "ServiceTrack",
-  description: "Monitoring progres servis unit multi-cabang",
+  title: "Service Handling KLA Computer",
+  description: "Monitoring progres servis unit multi-cabang — KLA Computer",
 };
 
 export default function RootLayout({
