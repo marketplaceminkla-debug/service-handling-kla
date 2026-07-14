@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Flame } from "lucide-react";
+import { Building2, Flame } from "lucide-react";
 import { ageLevel, listTickets, ticketAgeDays, URGENT_AGE_DAYS } from "@/lib/tickets";
 import { STATUS_LABEL, type TicketWithBranch } from "@/types";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,27 @@ export function Overview() {
 
   const urgentTickets = tickets.filter((t) => ageLevel(t) === "urgent");
 
+  const branchStatsMap = new Map<
+    string,
+    { name: string; total: number; aktif: number; urgent: number }
+  >();
+  tickets.forEach((t) => {
+    const key = t.branch_id;
+    const entry = branchStatsMap.get(key) ?? {
+      name: t.branch?.name ?? "Tanpa Cabang",
+      total: 0,
+      aktif: 0,
+      urgent: 0,
+    };
+    entry.total += 1;
+    if (t.status !== "selesai") entry.aktif += 1;
+    if (ageLevel(t) === "urgent") entry.urgent += 1;
+    branchStatsMap.set(key, entry);
+  });
+  const branchStats = Array.from(branchStatsMap.values()).sort(
+    (a, b) => b.total - a.total
+  );
+
   return (
     <div>
       <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">
@@ -80,6 +101,65 @@ export function Overview() {
           <p className="text-2xl font-bold text-red-700 dark:text-red-400 mt-1">
             {urgentTickets.length}
           </p>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+        <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+          <Building2 size={18} className="text-gray-400 dark:text-gray-500" />
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+            Tiket per Cabang ({branchStats.length})
+          </h3>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
+                <th className="px-5 py-2 font-medium">Cabang</th>
+                <th className="px-5 py-2 font-medium">Total Tiket</th>
+                <th className="px-5 py-2 font-medium">Aktif (belum selesai)</th>
+                <th className="px-5 py-2 font-medium">Urgent</th>
+              </tr>
+            </thead>
+            <tbody>
+              {branchStats.map((b) => (
+                <tr
+                  key={b.name}
+                  className="border-b border-gray-50 dark:border-gray-700/60 last:border-0"
+                >
+                  <td className="px-5 py-2.5 font-medium text-gray-900 dark:text-gray-100">
+                    {b.name}
+                  </td>
+                  <td className="px-5 py-2.5 text-gray-600 dark:text-gray-300">
+                    {b.total}
+                  </td>
+                  <td className="px-5 py-2.5 text-gray-600 dark:text-gray-300">
+                    {b.aktif}
+                  </td>
+                  <td className="px-5 py-2.5">
+                    {b.urgent > 0 ? (
+                      <span className="text-xs font-medium px-2 py-1 rounded bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                        {b.urgent}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500">0</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {branchStats.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-5 py-6 text-center text-gray-400 dark:text-gray-500"
+                  >
+                    Belum ada tiket.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
