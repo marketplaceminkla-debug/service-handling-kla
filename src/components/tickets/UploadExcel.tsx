@@ -151,6 +151,8 @@ export function UploadExcel({ kategori }: { kategori: TicketKategori }) {
                   <th className="px-4 py-2 font-medium">Cabang</th>
                   <th className="px-4 py-2 font-medium">Kode Barang</th>
                   <th className="px-4 py-2 font-medium">Status</th>
+                  <th className="px-4 py-2 font-medium">Lama</th>
+                  <th className="px-4 py-2 font-medium">Posisi Unit</th>
                   <th className="px-4 py-2 font-medium">Keterangan</th>
                 </tr>
               </thead>
@@ -163,6 +165,12 @@ export function UploadExcel({ kategori }: { kategori: TicketKategori }) {
                     <td className="px-4 py-2 text-gray-600">{r.branch_name}</td>
                     <td className="px-4 py-2 text-gray-600">{r.kode_barang}</td>
                     <td className="px-4 py-2 text-gray-600">{r.status_raw}</td>
+                    <td className="px-4 py-2 text-gray-600">
+                      {r.lama_hari ? `${r.lama_hari} hari` : "-"}
+                    </td>
+                    <td className="px-4 py-2 text-gray-600">
+                      {r.posisi_unit || "-"}
+                    </td>
                     <td className="px-4 py-2 text-gray-500">{r.keterangan}</td>
                   </tr>
                 ))}
