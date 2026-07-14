@@ -5,7 +5,10 @@ import { TicketList } from "@/components/tickets/TicketList";
 import { NewTicketForm } from "@/components/tickets/NewTicketForm";
 import { TicketDetail } from "@/components/tickets/TicketDetail";
 
-type View = { mode: "list" } | { mode: "new" } | { mode: "detail"; id: string };
+type View =
+  | { mode: "list" }
+  | { mode: "new" }
+  | { mode: "detail"; id: string; startInEdit?: boolean };
 
 export function TicketsPanel() {
   const [view, setView] = useState<View>({ mode: "list" });
@@ -27,6 +30,7 @@ export function TicketsPanel() {
     return (
       <TicketDetail
         ticketId={view.id}
+        startInEdit={view.startInEdit}
         onBack={() => {
           setRefreshKey((k) => k + 1);
           setView({ mode: "list" });
@@ -40,6 +44,7 @@ export function TicketsPanel() {
       key={refreshKey}
       onNew={() => setView({ mode: "new" })}
       onSelect={(id) => setView({ mode: "detail", id })}
+      onEdit={(id) => setView({ mode: "detail", id, startInEdit: true })}
     />
   );
 }
