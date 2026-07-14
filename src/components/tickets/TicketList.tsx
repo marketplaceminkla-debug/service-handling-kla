@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Pencil } from "lucide-react";
-import { listTickets, ticketAgeDays, isStuck } from "@/lib/tickets";
+import { ageLevel, listTickets, ticketAgeDays, isStuck } from "@/lib/tickets";
 import { listBranches } from "@/lib/branches";
 import { listBrands } from "@/lib/brands";
 import {
@@ -21,6 +21,12 @@ const STATUS_COLORS: Record<string, string> = {
   diproses: "bg-yellow-50 text-yellow-800",
   tunggu_sparepart: "bg-orange-50 text-orange-700",
   selesai: "bg-green-50 text-green-700",
+};
+
+const AGE_COLORS: Record<string, string> = {
+  urgent: "bg-red-50 text-red-700",
+  warning: "bg-orange-50 text-orange-700",
+  normal: "bg-green-50 text-green-700",
 };
 
 export function TicketList({
@@ -166,8 +172,9 @@ export function TicketList({
               <th className="px-4 py-3 font-medium">Brand</th>
               <th className="px-4 py-3 font-medium">Kategori</th>
               <th className="px-4 py-3 font-medium">Kode Barang</th>
+              <th className="px-4 py-3 font-medium">Posisi Unit</th>
               <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Lama</th>
+              <th className="px-4 py-3 font-medium">Lama di Servis</th>
               <th className="px-4 py-3 font-medium"></th>
             </tr>
           </thead>
@@ -193,6 +200,9 @@ export function TicketList({
                 <td className="px-4 py-3 text-gray-600">
                   {t.kode_barang} · {t.serial_number}
                 </td>
+                <td className="px-4 py-3 text-gray-600">
+                  {t.posisi_unit || "-"}
+                </td>
                 <td className="px-4 py-3">
                   <span
                     className={cn(
@@ -203,10 +213,24 @@ export function TicketList({
                     {STATUS_LABEL[t.status]}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-gray-500">
-                  {ticketAgeDays(t)} hari
+                <td className="px-4 py-3">
+                  {(() => {
+                    const level = ageLevel(t);
+                    return (
+                      <span
+                        className={cn(
+                          "text-xs font-medium px-2 py-1 rounded",
+                          level ? AGE_COLORS[level] : "text-gray-500"
+                        )}
+                      >
+                        {ticketAgeDays(t)} hari
+                      </span>
+                    );
+                  })()}
                   {isStuck(t) && (
-                    <span className="ml-2 text-danger font-medium">macet</span>
+                    <span className="ml-2 text-danger font-medium text-xs">
+                      macet
+                    </span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
@@ -225,7 +249,7 @@ export function TicketList({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={9} className="px-4 py-8 text-center text-gray-400">
                   Belum ada tiket.
                 </td>
               </tr>
