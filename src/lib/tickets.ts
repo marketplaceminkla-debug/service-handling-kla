@@ -47,6 +47,22 @@ export function waLink(rawNumber: string, message: string) {
   return `https://wa.me/${withCountryCode}?text=${encodeURIComponent(message)}`;
 }
 
+export function buildFollowUpMessage(
+  targetName: string,
+  items: Pick<ServiceTicket, "no_service" | "kode_barang" | "serial_number">[],
+  note: string
+) {
+  const list = items
+    .map(
+      (t, i) => `${i + 1}. ${t.no_service}\n${t.kode_barang}\n${t.serial_number}`
+    )
+    .join("\n");
+
+  let message = `Halo Tim ${targetName}, mohon dibantu cek untuk unit service berikut\n\n${list}`;
+  if (note.trim()) message += `\n\n${note.trim()}`;
+  return message;
+}
+
 export async function listTickets(): Promise<TicketWithBranch[]> {
   const { data, error } = await supabase
     .from("service_tickets")

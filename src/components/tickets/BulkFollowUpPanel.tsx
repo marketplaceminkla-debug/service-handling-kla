@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { addFollowUp, waLink } from "@/lib/tickets";
+import { addFollowUp, buildFollowUpMessage, waLink } from "@/lib/tickets";
 import {
   STATUS_LABEL,
   type FollowUpChannel,
@@ -88,12 +88,7 @@ export function BulkFollowUpPanel({
       );
 
       if (channel && target?.wa_number) {
-        const list = tickets
-          .map((t) => `- ${t.no_service} (${t.kode_barang})`)
-          .join("\n");
-        const message = `Update Servis — ${tickets.length} tiket\n${
-          channel === "cabang" ? "Cabang" : "Brand"
-        }: ${target.name}\nStatus: ${STATUS_LABEL[statusTo]}\n\n${note.trim()}\n\n${list}`;
+        const message = buildFollowUpMessage(target.name, tickets, note);
         window.open(waLink(target.wa_number, message), "_blank");
       }
 
