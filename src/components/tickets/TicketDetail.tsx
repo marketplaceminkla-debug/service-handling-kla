@@ -14,6 +14,7 @@ import {
 } from "@/lib/tickets";
 import { listBranches } from "@/lib/branches";
 import { listBrands } from "@/lib/brands";
+import { PosisiUnitSelect } from "@/components/tickets/PosisiUnitSelect";
 import {
   KATEGORI_LABEL,
   STATUS_LABEL,
@@ -365,12 +366,9 @@ export function TicketDetail({
                   />
                 </EditField>
                 <EditField label="Posisi Unit">
-                  <input
+                  <PosisiUnitSelect
                     value={edit.posisi_unit}
-                    onChange={(e) =>
-                      setEdit({ ...edit, posisi_unit: e.target.value })
-                    }
-                    className="input"
+                    onChange={(v) => setEdit({ ...edit, posisi_unit: v })}
                   />
                 </EditField>
               </div>
