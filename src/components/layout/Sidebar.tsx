@@ -1,7 +1,8 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { LogOut, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { navForRole, type PanelKey } from "@/components/layout/nav-config";
 import { LogoWordmark } from "@/components/layout/Logo";
@@ -14,6 +15,7 @@ export function Sidebar({
   onSelect: (key: PanelKey) => void;
 }) {
   const { profile, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   if (!profile) return null;
 
   const items = navForRole(profile.role);
@@ -51,6 +53,14 @@ export function Sidebar({
           );
         })}
       </nav>
+
+      <button
+        onClick={toggleTheme}
+        className="flex items-center gap-3 px-5 py-4 text-sm font-medium text-purple-100/80 border-t border-white/10 hover:bg-white/5 hover:text-white"
+      >
+        {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+        {theme === "dark" ? "Mode Terang" : "Mode Gelap"}
+      </button>
 
       <button
         onClick={() => signOut()}

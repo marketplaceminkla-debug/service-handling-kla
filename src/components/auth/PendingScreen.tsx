@@ -8,19 +8,21 @@ export function PendingScreen() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-primary px-4">
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-lg p-8 text-center">
+      <div className="w-full max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
         <div className="bg-primary -mx-8 -mt-8 mb-6 px-8 py-6 rounded-t-xl flex justify-center">
           <LogoWordmark />
         </div>
-        <h1 className="text-lg font-bold text-gray-900">Akun Belum Aktif</h1>
-        <p className="text-sm text-gray-500 mt-2">
+        <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+          Akun Belum Aktif
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
           Hai{profile?.full_name ? ` ${profile.full_name}` : ""}, akun kamu (
           {profile?.email}) sudah terdaftar tapi belum diaktifkan. Hubungi
           Super Admin untuk aktivasi.
         </p>
         <button
           onClick={() => signOut()}
-          className="mt-6 w-full rounded-lg border border-gray-300 text-gray-700 font-medium py-2.5 text-sm hover:bg-gray-50"
+          className="mt-6 w-full rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
         >
           Keluar
         </button>

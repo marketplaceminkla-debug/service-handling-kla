@@ -73,8 +73,12 @@ export function KelolaAkun() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Kelola Akun</h2>
-          <p className="text-sm text-gray-500">{profiles.length} akun</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            Kelola Akun
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {profiles.length} akun
+          </p>
         </div>
         <button
           onClick={() => setShowForm((v) => !v)}
@@ -99,12 +103,12 @@ export function KelolaAkun() {
       {error && <p className="text-sm text-danger mb-4">{error}</p>}
 
       {loading ? (
-        <p className="text-sm text-gray-400">Memuat...</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500">Memuat...</p>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b border-gray-100">
+              <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
                 <th className="px-4 py-3 font-medium">Nama / Email</th>
                 <th className="px-4 py-3 font-medium">Role</th>
                 <th className="px-4 py-3 font-medium">Cabang</th>
@@ -113,18 +117,23 @@ export function KelolaAkun() {
             </thead>
             <tbody>
               {profiles.map((p) => (
-                <tr key={p.id} className="border-b border-gray-50 last:border-0 align-top">
+                <tr
+                  key={p.id}
+                  className="border-b border-gray-50 dark:border-gray-700/60 last:border-0 align-top"
+                >
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">
                       {p.full_name || "-"}
                     </p>
-                    <p className="text-gray-500 text-xs">{p.email}</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs">
+                      {p.email}
+                    </p>
                   </td>
                   <td className="px-4 py-3">
                     <select
                       value={p.role}
                       onChange={(e) => changeRole(p, e.target.value as Role)}
-                      className="text-sm rounded-lg border border-gray-300 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand"
+                      className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand"
                     >
                       <option value="staff">Staff</option>
                       <option value="admin">Admin</option>
@@ -142,8 +151,8 @@ export function KelolaAkun() {
                             className={cn(
                               "text-xs px-2 py-1 rounded border",
                               active
-                                ? "bg-yellow-50 border-brand text-gray-900"
-                                : "border-gray-200 text-gray-400"
+                                ? "bg-yellow-50 dark:bg-yellow-900/30 border-brand text-gray-900 dark:text-gray-100"
+                                : "border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-500"
                             )}
                           >
                             {b.code}
@@ -151,11 +160,13 @@ export function KelolaAkun() {
                         );
                       })}
                       {branches.length === 0 && (
-                        <span className="text-xs text-gray-400">-</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">
+                          -
+                        </span>
                       )}
                     </div>
                     {p.branch_scope.length === 0 && (
-                      <p className="text-[11px] text-gray-400 mt-1">
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
                         Kosong = semua cabang
                       </p>
                     )}
@@ -166,8 +177,8 @@ export function KelolaAkun() {
                       className={cn(
                         "text-xs font-medium px-2 py-1 rounded",
                         p.is_active
-                          ? "bg-green-50 text-green-700"
-                          : "bg-gray-100 text-gray-500"
+                          ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                       )}
                     >
                       {p.is_active ? "Aktif" : "Nonaktif"}
@@ -177,7 +188,10 @@ export function KelolaAkun() {
               ))}
               {profiles.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                  <td
+                    colSpan={4}
+                    className="px-4 py-8 text-center text-gray-400 dark:text-gray-500"
+                  >
                     Belum ada akun.
                   </td>
                 </tr>
@@ -239,22 +253,22 @@ function CreateUserForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white rounded-xl border border-gray-200 p-6 mb-6 space-y-4"
+      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6 space-y-4"
     >
       <div className="grid grid-cols-2 gap-4">
         <label className="block">
-          <span className="block text-sm font-medium text-gray-700 mb-1">
+          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Nama Lengkap
           </span>
           <input
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+            className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </label>
         <label className="block">
-          <span className="block text-sm font-medium text-gray-700 mb-1">
+          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Email
           </span>
           <input
@@ -262,14 +276,14 @@ function CreateUserForm({
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+            className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </label>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <label className="block">
-          <span className="block text-sm font-medium text-gray-700 mb-1">
+          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Password Awal
           </span>
           <input
@@ -278,17 +292,17 @@ function CreateUserForm({
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+            className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </label>
         <label className="block">
-          <span className="block text-sm font-medium text-gray-700 mb-1">
+          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Role
           </span>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as Role)}
-            className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+            className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
           >
             <option value="staff">Staff</option>
             <option value="admin">Admin</option>
@@ -298,7 +312,7 @@ function CreateUserForm({
       </div>
 
       <div>
-        <span className="block text-sm font-medium text-gray-700 mb-1">
+        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Cabang (kosong = semua cabang)
         </span>
         <div className="flex flex-wrap gap-2">
@@ -316,8 +330,8 @@ function CreateUserForm({
                 className={cn(
                   "text-xs px-2.5 py-1.5 rounded border",
                   active
-                    ? "bg-yellow-50 border-brand text-gray-900"
-                    : "border-gray-200 text-gray-500"
+                    ? "bg-yellow-50 dark:bg-yellow-900/30 border-brand text-gray-900 dark:text-gray-100"
+                    : "border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400"
                 )}
               >
                 {b.name}

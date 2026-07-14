@@ -29,39 +29,44 @@ export function ExportExcelPanel({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900">Export Laporan Servis</h3>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-700">
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+          Export Laporan Servis
+        </h3>
+        <button
+          onClick={onClose}
+          className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
+        >
           <X size={18} />
         </button>
       </div>
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
         Berdasarkan tanggal lapor. Ngikutin filter cabang/brand/kategori/status
         yang lagi aktif di list. Kosongin kalau mau semua periode.
       </p>
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="block">
-          <span className="block text-sm font-medium text-gray-700 mb-1">
+          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Dari Tanggal
           </span>
           <input
             type="date"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+            className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:[color-scheme:dark] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </label>
         <label className="block">
-          <span className="block text-sm font-medium text-gray-700 mb-1">
+          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Sampai Tanggal
           </span>
           <input
             type="date"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+            className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:[color-scheme:dark] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </label>
         <button

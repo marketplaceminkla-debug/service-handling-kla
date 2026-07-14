@@ -71,19 +71,19 @@ export function NewTicketForm({
     <div className="max-w-2xl">
       <button
         onClick={onCancel}
-        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 mb-4"
+        className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 mb-4"
       >
         <ArrowLeft size={16} />
         Kembali
       </button>
 
-      <h2 className="text-xl font-bold text-gray-900 mb-6">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">
         Lapor Unit Bermasalah
       </h2>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-xl border border-gray-200 p-6 space-y-4"
+        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 space-y-4"
       >
         <div className="grid grid-cols-2 gap-4">
           <Field label="No. Service">
@@ -187,7 +187,7 @@ export function NewTicketForm({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             Batal
           </button>
@@ -207,10 +207,16 @@ export function NewTicketForm({
             border-radius: 0.5rem;
             padding: 0.5rem 0.75rem;
             font-size: 0.875rem;
+            color: #111827;
           }
           .input:focus {
             outline: none;
             box-shadow: 0 0 0 2px #f5c200;
+          }
+          :global(.dark) .input {
+            border-color: #4b5563;
+            background: #111827;
+            color: #f3f4f6;
           }
         `}</style>
       </form>
@@ -227,7 +233,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="block text-sm font-medium text-gray-700 mb-1">
+      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         {label}
       </span>
       {children}

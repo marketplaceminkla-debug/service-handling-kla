@@ -69,8 +69,12 @@ export function BranchesPanel() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Master Cabang</h2>
-          <p className="text-sm text-gray-500">{branches.length} cabang</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            Master Cabang
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {branches.length} cabang
+          </p>
         </div>
         <button
           onClick={() => setShowForm((v) => !v)}
@@ -84,38 +88,38 @@ export function BranchesPanel() {
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-xl border border-gray-200 p-6 mb-6 grid grid-cols-3 gap-4 items-end"
+          className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6 grid grid-cols-3 gap-4 items-end"
         >
           <label className="block">
-            <span className="block text-sm font-medium text-gray-700 mb-1">
+            <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Nama Cabang
             </span>
             <input
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+              className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </label>
           <label className="block">
-            <span className="block text-sm font-medium text-gray-700 mb-1">
+            <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Kode
             </span>
             <input
               required
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+              className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </label>
           <label className="block">
-            <span className="block text-sm font-medium text-gray-700 mb-1">
+            <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               No. WhatsApp (opsional)
             </span>
             <input
               value={waNumber}
               onChange={(e) => setWaNumber(e.target.value)}
-              className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+              className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </label>
           <div className="col-span-3 flex justify-end gap-3">
@@ -133,12 +137,12 @@ export function BranchesPanel() {
       {error && <p className="text-sm text-danger mb-4">{error}</p>}
 
       {loading ? (
-        <p className="text-sm text-gray-400">Memuat...</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500">Memuat...</p>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b border-gray-100">
+              <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
                 <th className="px-4 py-3 font-medium">Nama</th>
                 <th className="px-4 py-3 font-medium">Kode</th>
                 <th className="px-4 py-3 font-medium">WhatsApp</th>
@@ -150,13 +154,15 @@ export function BranchesPanel() {
               {branches.map((b) => (
                 <tr
                   key={b.id}
-                  className="border-b border-gray-50 last:border-0"
+                  className="border-b border-gray-50 dark:border-gray-700/60 last:border-0"
                 >
-                  <td className="px-4 py-3 font-medium text-gray-900">
+                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
                     {b.name}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{b.code}</td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                    {b.code}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                     {b.wa_number || "-"}
                   </td>
                   <td className="px-4 py-3">
@@ -164,8 +170,8 @@ export function BranchesPanel() {
                       className={cn(
                         "text-xs font-medium px-2 py-1 rounded",
                         b.is_active
-                          ? "bg-green-50 text-green-700"
-                          : "bg-gray-100 text-gray-500"
+                          ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                       )}
                     >
                       {b.is_active ? "Aktif" : "Nonaktif"}
@@ -174,13 +180,13 @@ export function BranchesPanel() {
                   <td className="px-4 py-3 text-right space-x-3">
                     <button
                       onClick={() => editWaNumber(b)}
-                      className="text-xs font-medium text-gray-500 hover:text-gray-900"
+                      className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                     >
                       Ubah WA
                     </button>
                     <button
                       onClick={() => toggleActive(b)}
-                      className="text-xs font-medium text-gray-500 hover:text-gray-900"
+                      className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                     >
                       {b.is_active ? "Nonaktifkan" : "Aktifkan"}
                     </button>
@@ -189,7 +195,10 @@ export function BranchesPanel() {
               ))}
               {branches.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                  <td
+                    colSpan={5}
+                    className="px-4 py-8 text-center text-gray-400 dark:text-gray-500"
+                  >
                     Belum ada cabang.
                   </td>
                 </tr>
