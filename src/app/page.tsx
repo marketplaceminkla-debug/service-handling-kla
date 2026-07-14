@@ -18,7 +18,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-main-bg text-gray-400 text-sm">
+      <div className="min-h-screen flex items-center justify-center bg-main-bg dark:bg-gray-950 text-gray-400 dark:text-gray-500 text-sm">
         Memuat...
       </div>
     );
@@ -31,7 +31,7 @@ export default function Home() {
   const panel = allowedKeys.includes(active) ? active : "dashboard";
 
   return (
-    <div className="flex min-h-screen bg-main-bg">
+    <div className="flex min-h-screen bg-main-bg dark:bg-gray-950">
       <Sidebar active={panel} onSelect={setActive} />
       <main className="flex-1 p-8">
         {panel === "dashboard" && <Overview />}

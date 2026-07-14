@@ -103,14 +103,14 @@ export function BulkFollowUpPanel({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900">
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
           Follow Up {tickets.length} Tiket Terpilih
         </h3>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-700"
+          className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
         >
           <X size={18} />
         </button>
@@ -119,7 +119,7 @@ export function BulkFollowUpPanel({
       <select
         value={statusTo}
         onChange={(e) => setStatusTo(e.target.value as TicketStatus)}
-        className="text-sm rounded-lg border border-gray-300 px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-brand"
+        className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-brand"
       >
         {Object.entries(STATUS_LABEL).map(([value, label]) => (
           <option key={value} value={value}>
@@ -132,7 +132,7 @@ export function BulkFollowUpPanel({
         onChange={(e) => setNote(e.target.value)}
         placeholder="Catatan follow-up buat semua tiket terpilih..."
         rows={3}
-        className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+        className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
       />
 
       {error && <p className="text-sm text-danger mt-2">{error}</p>}
@@ -141,7 +141,7 @@ export function BulkFollowUpPanel({
         <button
           onClick={() => submit(null)}
           disabled={submitting}
-          className="px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-60"
+          className="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-60"
         >
           Simpan Catatan
         </button>

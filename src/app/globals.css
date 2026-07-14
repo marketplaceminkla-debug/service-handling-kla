@@ -6,8 +6,3 @@ html,
 body {
   height: 100%;
 }
-
-body {
-  background-color: theme("colors.main-bg");
-  color: #1a1a1a;
-}

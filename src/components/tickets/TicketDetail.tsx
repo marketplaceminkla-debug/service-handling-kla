@@ -29,10 +29,12 @@ import {
 import { cn, formatDate } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
-  baru: "bg-blue-50 text-blue-700",
-  diproses: "bg-yellow-50 text-yellow-800",
-  tunggu_sparepart: "bg-orange-50 text-orange-700",
-  selesai: "bg-green-50 text-green-700",
+  baru: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
+  diproses:
+    "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
+  tunggu_sparepart:
+    "bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300",
+  selesai: "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300",
 };
 
 const CHANNEL_LABEL: Record<FollowUpChannel, string> = {
@@ -194,7 +196,12 @@ export function TicketDetail({
     }
   };
 
-  if (loading) return <p className="text-sm text-gray-400">Memuat tiket...</p>;
+  if (loading)
+    return (
+      <p className="text-sm text-gray-400 dark:text-gray-500">
+        Memuat tiket...
+      </p>
+    );
   if (error && !ticket) return <p className="text-sm text-danger">{error}</p>;
   if (!ticket) return null;
 
@@ -202,19 +209,19 @@ export function TicketDetail({
     <div className="max-w-3xl">
       <button
         onClick={onBack}
-        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 mb-4"
+        className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 mb-4"
       >
         <ArrowLeft size={16} />
         Kembali
       </button>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
               {ticket.no_service}
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {ticket.branch?.name ?? "-"} · {KATEGORI_LABEL[ticket.kategori]}
               {ticket.brand?.name ? ` · ${ticket.brand.name}` : ""}
             </p>
@@ -231,7 +238,7 @@ export function TicketDetail({
             {!isEditing && (
               <button
                 onClick={startEdit}
-                className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-900 border border-gray-200 rounded-lg px-2.5 py-1.5"
+                className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 border border-gray-200 dark:border-gray-600 rounded-lg px-2.5 py-1.5"
               >
                 <Pencil size={13} />
                 Edit
@@ -259,8 +266,12 @@ export function TicketDetail({
 
             {ticket.keterangan && (
               <div className="mt-4">
-                <p className="text-sm text-gray-500 mb-1">Keterangan</p>
-                <p className="text-sm text-gray-800">{ticket.keterangan}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                  Keterangan
+                </p>
+                <p className="text-sm text-gray-800 dark:text-gray-200">
+                  {ticket.keterangan}
+                </p>
               </div>
             )}
           </>
@@ -392,7 +403,7 @@ export function TicketDetail({
                     setIsEditing(false);
                     setError(null);
                   }}
-                  className="px-4 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Batal
                 </button>
@@ -412,10 +423,16 @@ export function TicketDetail({
                   border-radius: 0.5rem;
                   padding: 0.5rem 0.75rem;
                   font-size: 0.875rem;
+                  color: #111827;
                 }
                 .input:focus {
                   outline: none;
                   box-shadow: 0 0 0 2px #f9c227;
+                }
+                :global(.dark) .input {
+                  border-color: #4b5563;
+                  background: #111827;
+                  color: #f3f4f6;
                 }
               `}</style>
             </div>
@@ -424,12 +441,14 @@ export function TicketDetail({
       </div>
 
       {ticket.status !== "selesai" && !isEditing && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <h3 className="font-semibold text-gray-900 mb-3">Tambah Follow-up</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            Tambah Follow-up
+          </h3>
           <select
             value={statusTo}
             onChange={(e) => setStatusTo(e.target.value as TicketStatus)}
-            className="text-sm rounded-lg border border-gray-300 px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-brand"
+            className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-brand"
           >
             {Object.entries(STATUS_LABEL).map(([value, label]) => (
               <option key={value} value={value}>
@@ -442,14 +461,14 @@ export function TicketDetail({
             onChange={(e) => setNote(e.target.value)}
             placeholder="Catatan progres..."
             rows={3}
-            className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+            className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
           />
           {error && <p className="text-sm text-danger mt-2">{error}</p>}
           <div className="flex flex-wrap justify-end gap-3 mt-3">
             <button
               onClick={() => submitFollowUp(null)}
               disabled={submitting}
-              className="px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-60"
+              className="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-60"
             >
               Simpan Catatan
             </button>
@@ -473,36 +492,42 @@ export function TicketDetail({
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900">Riwayat Follow-up</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+            Riwayat Follow-up
+          </h3>
         </div>
         {updates.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-gray-400">Belum ada follow-up.</p>
+          <p className="px-5 py-6 text-sm text-gray-400 dark:text-gray-500">
+            Belum ada follow-up.
+          </p>
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-gray-100 dark:divide-gray-700">
             {updates.map((u) => (
               <li key={u.id} className="px-5 py-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {u.created_by_name || "Sistem"}
                     {u.channel && (
-                      <span className="ml-2 text-[11px] font-medium text-green-700 bg-green-50 px-1.5 py-0.5 rounded">
+                      <span className="ml-2 text-[11px] font-medium text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/30 px-1.5 py-0.5 rounded">
                         {CHANNEL_LABEL[u.channel]}
                       </span>
                     )}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
                     {formatDate(u.created_at)}
                   </p>
                 </div>
                 {u.status_from && u.status_to && (
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     {STATUS_LABEL[u.status_from as TicketStatus]} →{" "}
                     {STATUS_LABEL[u.status_to as TicketStatus]}
                   </p>
                 )}
-                <p className="text-sm text-gray-700 mt-1">{u.note}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                  {u.note}
+                </p>
               </li>
             ))}
           </ul>
@@ -526,8 +551,10 @@ function nextStatus(status: TicketStatus): TicketStatus {
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-gray-500">{label}</dt>
-      <dd className="text-gray-900 font-medium mt-0.5">{value}</dd>
+      <dt className="text-gray-500 dark:text-gray-400">{label}</dt>
+      <dd className="text-gray-900 dark:text-gray-100 font-medium mt-0.5">
+        {value}
+      </dd>
     </div>
   );
 }
@@ -541,7 +568,7 @@ function EditField({
 }) {
   return (
     <label className="block">
-      <span className="block text-sm font-medium text-gray-700 mb-1">
+      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         {label}
       </span>
       {children}

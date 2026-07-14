@@ -64,7 +64,7 @@ export function InlineEditTicketRow({
   };
 
   return (
-    <tr className="bg-yellow-50/40">
+    <tr className="bg-yellow-50/40 dark:bg-yellow-900/10">
       <td colSpan={colSpan} className="px-4 py-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Field label="Cabang">
@@ -158,7 +158,7 @@ export function InlineEditTicketRow({
         <div className="flex justify-end gap-3 mt-4">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-100"
+            className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             Batal
           </button>
@@ -179,10 +179,16 @@ export function InlineEditTicketRow({
             padding: 0.5rem 0.75rem;
             font-size: 0.875rem;
             background: white;
+            color: #111827;
           }
           .input:focus {
             outline: none;
             box-shadow: 0 0 0 2px #f9c227;
+          }
+          :global(.dark) .input {
+            border-color: #4b5563;
+            background: #111827;
+            color: #f3f4f6;
           }
         `}</style>
       </td>
@@ -199,7 +205,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-gray-600 mb-1">
+      <span className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
         {label}
       </span>
       {children}
