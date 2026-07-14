@@ -2,25 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
-import { createBranch, listBranches, updateBranch } from "@/lib/branches";
-import type { Branch } from "@/types";
+import { createBrand, listBrands, updateBrand } from "@/lib/brands";
+import type { Brand } from "@/types";
 import { cn } from "@/lib/utils";
 
-export function BranchesPanel() {
-  const [branches, setBranches] = useState<Branch[]>([]);
+export function BrandsPanel() {
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
   const [name, setName] = useState("");
-  const [code, setCode] = useState("");
   const [waNumber, setWaNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const load = () => {
     setLoading(true);
-    listBranches()
-      .then(setBranches)
+    listBrands()
+      .then(setBrands)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   };
@@ -32,36 +31,35 @@ export function BranchesPanel() {
     setSubmitting(true);
     setError(null);
     try {
-      await createBranch({ name, code, wa_number: waNumber || null });
+      await createBrand({ name, wa_number: waNumber || null });
       setName("");
-      setCode("");
       setWaNumber("");
       setShowForm(false);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menambah cabang");
+      setError(err instanceof Error ? err.message : "Gagal menambah brand");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const toggleActive = async (b: Branch) => {
+  const toggleActive = async (b: Brand) => {
     try {
-      await updateBranch(b.id, { is_active: !b.is_active });
+      await updateBrand(b.id, { is_active: !b.is_active });
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal mengubah cabang");
+      setError(err instanceof Error ? err.message : "Gagal mengubah brand");
     }
   };
 
-  const editWaNumber = async (b: Branch) => {
+  const editWaNumber = async (b: Brand) => {
     const value = window.prompt(`No. WhatsApp untuk ${b.name}`, b.wa_number ?? "");
     if (value === null) return;
     try {
-      await updateBranch(b.id, { wa_number: value || null });
+      await updateBrand(b.id, { wa_number: value || null });
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal mengubah cabang");
+      setError(err instanceof Error ? err.message : "Gagal mengubah brand");
     }
   };
 
@@ -69,42 +67,34 @@ export function BranchesPanel() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Master Cabang</h2>
-          <p className="text-sm text-gray-500">{branches.length} cabang</p>
+          <h2 className="text-xl font-bold text-gray-900">Master Brand</h2>
+          <p className="text-sm text-gray-500">
+            {brands.length} brand — dipakai buat follow-up via WhatsApp
+          </p>
         </div>
         <button
           onClick={() => setShowForm((v) => !v)}
           className="flex items-center gap-2 bg-brand text-gray-900 font-semibold text-sm px-4 py-2.5 rounded-lg hover:brightness-95"
         >
           <Plus size={16} />
-          Tambah Cabang
+          Tambah Brand
         </button>
       </div>
 
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-xl border border-gray-200 p-6 mb-6 grid grid-cols-3 gap-4 items-end"
+          className="bg-white rounded-xl border border-gray-200 p-6 mb-6 grid grid-cols-2 gap-4 items-end"
         >
           <label className="block">
             <span className="block text-sm font-medium text-gray-700 mb-1">
-              Nama Cabang
+              Nama Brand
             </span>
             <input
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
-            />
-          </label>
-          <label className="block">
-            <span className="block text-sm font-medium text-gray-700 mb-1">
-              Kode
-            </span>
-            <input
-              required
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
+              placeholder="mis. Acer, Lenovo, Asus"
               className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </label>
@@ -118,7 +108,7 @@ export function BranchesPanel() {
               className="w-full text-sm rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </label>
-          <div className="col-span-3 flex justify-end gap-3">
+          <div className="col-span-2 flex justify-end gap-3">
             <button
               type="submit"
               disabled={submitting}
@@ -140,22 +130,17 @@ export function BranchesPanel() {
             <thead>
               <tr className="text-left text-gray-500 border-b border-gray-100">
                 <th className="px-4 py-3 font-medium">Nama</th>
-                <th className="px-4 py-3 font-medium">Kode</th>
                 <th className="px-4 py-3 font-medium">WhatsApp</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium"></th>
               </tr>
             </thead>
             <tbody>
-              {branches.map((b) => (
-                <tr
-                  key={b.id}
-                  className="border-b border-gray-50 last:border-0"
-                >
+              {brands.map((b) => (
+                <tr key={b.id} className="border-b border-gray-50 last:border-0">
                   <td className="px-4 py-3 font-medium text-gray-900">
                     {b.name}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{b.code}</td>
                   <td className="px-4 py-3 text-gray-600">
                     {b.wa_number || "-"}
                   </td>
@@ -187,10 +172,10 @@ export function BranchesPanel() {
                   </td>
                 </tr>
               ))}
-              {branches.length === 0 && (
+              {brands.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                    Belum ada cabang.
+                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                    Belum ada brand.
                   </td>
                 </tr>
               )}

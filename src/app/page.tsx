@@ -8,7 +8,9 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { navForRole, type PanelKey } from "@/components/layout/nav-config";
 import { Overview } from "@/components/dashboard/Overview";
 import { TicketsPanel } from "@/components/tickets/TicketsPanel";
+import { UploadExcel } from "@/components/tickets/UploadExcel";
 import { BranchesPanel } from "@/components/master/Branches";
+import { BrandsPanel } from "@/components/master/Brands";
 import { KelolaAkun } from "@/components/layout/KelolaAkun";
 
 export default function Home() {
@@ -35,7 +37,10 @@ export default function Home() {
       <main className="flex-1 p-8">
         {panel === "dashboard" && <Overview />}
         {panel === "tickets" && <TicketsPanel />}
-        {panel === "master" && <BranchesPanel />}
+        {panel === "upload-stok" && <UploadExcel kategori="stok" />}
+        {panel === "upload-user" && <UploadExcel kategori="user" />}
+        {panel === "master-cabang" && <BranchesPanel />}
+        {panel === "master-brand" && <BrandsPanel />}
         {panel === "akun" && <KelolaAkun />}
       </main>
     </div>

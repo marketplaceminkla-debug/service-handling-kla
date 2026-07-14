@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { listBranches } from "@/lib/branches";
+import { listBrands } from "@/lib/brands";
 import { createTicket } from "@/lib/tickets";
-import type { Branch, TicketKategori } from "@/types";
+import type { Branch, Brand, TicketKategori } from "@/types";
 
 export function NewTicketForm({
   onCancel,
@@ -16,11 +17,13 @@ export function NewTicketForm({
 }) {
   const { profile } = useAuth();
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [noService, setNoService] = useState("");
   const [branchId, setBranchId] = useState("");
+  const [brandId, setBrandId] = useState("");
   const [kategori, setKategori] = useState<TicketKategori>("stok");
   const [kodeBarang, setKodeBarang] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
@@ -29,9 +32,10 @@ export function NewTicketForm({
   const [keterangan, setKeterangan] = useState("");
 
   useEffect(() => {
-    listBranches()
-      .then((b) => {
+    Promise.all([listBranches(), listBrands()])
+      .then(([b, br]) => {
         setBranches(b.filter((x) => x.is_active));
+        setBrands(br.filter((x) => x.is_active));
       })
       .catch((e) => setError(e.message));
   }, []);
@@ -44,6 +48,7 @@ export function NewTicketForm({
       await createTicket({
         no_service: noService.trim(),
         branch_id: branchId,
+        brand_id: brandId || null,
         kategori,
         kode_barang: kodeBarang.trim(),
         serial_number: serialNumber.trim(),
@@ -116,6 +121,23 @@ export function NewTicketForm({
               <option value="user">User</option>
             </select>
           </Field>
+          <Field label="Brand (opsional)">
+            <select
+              value={brandId}
+              onChange={(e) => setBrandId(e.target.value)}
+              className="input"
+            >
+              <option value="">- Belum diisi -</option>
+              {brands.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <Field label="Estimasi">
             <input
               value={estimasi}
