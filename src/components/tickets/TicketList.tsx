@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Search, Pencil, MessageCircle } from "lucide-react";
+import { Plus, Search, Pencil, MessageCircle, History } from "lucide-react";
 import { ageLevel, listTickets, ticketAgeDays, isStuck } from "@/lib/tickets";
 import { listBranches } from "@/lib/branches";
 import { listBrands } from "@/lib/brands";
@@ -262,16 +262,12 @@ export function TicketList({
             {filtered.map((t) => (
               <Fragment key={t.id}>
                 <tr
-                  onClick={() => onSelect(t.id)}
                   className={cn(
-                    "border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer",
+                    "border-b border-gray-50 last:border-0",
                     selectedIds.has(t.id) && "bg-yellow-50/60"
                   )}
                 >
-                  <td
-                    className="px-4 py-3"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <td className="px-4 py-3">
                     <input
                       type="checkbox"
                       checked={selectedIds.has(t.id)}
@@ -327,12 +323,18 @@ export function TicketList({
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingId(editingId === t.id ? null : t.id);
-                      }}
+                      onClick={() => onSelect(t.id)}
+                      title="Follow Up & Riwayat"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100"
+                    >
+                      <History size={15} />
+                    </button>
+                    <button
+                      onClick={() =>
+                        setEditingId(editingId === t.id ? null : t.id)
+                      }
                       title="Edit tiket"
                       className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100"
                     >
