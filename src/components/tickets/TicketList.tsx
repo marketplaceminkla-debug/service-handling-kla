@@ -1,12 +1,13 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Search, Pencil, MessageCircle, History } from "lucide-react";
+import { Plus, Search, Pencil, MessageCircle, History, FileDown } from "lucide-react";
 import { ageLevel, listTickets, ticketAgeDays, isStuck } from "@/lib/tickets";
 import { listBranches } from "@/lib/branches";
 import { listBrands } from "@/lib/brands";
 import { BulkFollowUpPanel } from "@/components/tickets/BulkFollowUpPanel";
 import { InlineEditTicketRow } from "@/components/tickets/InlineEditTicketRow";
+import { ExportExcelPanel } from "@/components/tickets/ExportExcelPanel";
 import {
   KATEGORI_LABEL,
   STATUS_LABEL,
@@ -53,6 +54,7 @@ export function TicketList({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkPanel, setShowBulkPanel] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showExportPanel, setShowExportPanel] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -126,13 +128,22 @@ export function TicketList({
           <h2 className="text-xl font-bold text-gray-900">Tiket Servis</h2>
           <p className="text-sm text-gray-500">{filtered.length} tiket</p>
         </div>
-        <button
-          onClick={onNew}
-          className="flex items-center gap-2 bg-brand text-gray-900 font-semibold text-sm px-4 py-2.5 rounded-lg hover:brightness-95"
-        >
-          <Plus size={16} />
-          Lapor Unit Baru
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowExportPanel((v) => !v)}
+            className="flex items-center gap-2 border border-gray-300 text-gray-700 font-medium text-sm px-4 py-2.5 rounded-lg hover:bg-gray-50"
+          >
+            <FileDown size={16} />
+            Export Excel
+          </button>
+          <button
+            onClick={onNew}
+            className="flex items-center gap-2 bg-brand text-gray-900 font-semibold text-sm px-4 py-2.5 rounded-lg hover:brightness-95"
+          >
+            <Plus size={16} />
+            Lapor Unit Baru
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3 mb-4">
@@ -199,6 +210,13 @@ export function TicketList({
           ))}
         </select>
       </div>
+
+      {showExportPanel && (
+        <ExportExcelPanel
+          tickets={filtered}
+          onClose={() => setShowExportPanel(false)}
+        />
+      )}
 
       {selectedIds.size > 0 && (
         <div className="flex items-center justify-between bg-yellow-50 border border-brand/40 rounded-xl px-4 py-3 mb-4">

@@ -103,6 +103,6 @@ src/
 
 - [ ] Notifikasi (toast/bell) real-time saat ada tiket baru atau macet
 - [ ] Upload foto bukti kerusakan/perbaikan (bucket Supabase Storage sudah disiapkan namanya: `ticket-photos`)
-- [ ] Export laporan servis ke Excel per periode
+- [x] Export laporan servis ke Excel per periode
 - [ ] SLA per prioritas (mis. urgent harus selesai <1 hari) dengan alert otomatis
 - [ ] Riwayat servis per unit (histori semua tiket 1 unit dari waktu ke waktu)
