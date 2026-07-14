@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { LogoWordmark } from "@/components/layout/Logo";
 
 export function LoginScreen() {
   const { signIn, signUp } = useAuth();
@@ -38,10 +39,12 @@ export function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-main-bg px-4">
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-        <h1 className="text-xl font-bold text-gray-900">ServiceTrack</h1>
-        <p className="text-sm text-gray-500 mt-1 mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-primary px-4">
+      <div className="w-full max-w-sm bg-white rounded-xl shadow-lg p-8">
+        <div className="bg-primary -mx-8 -mt-8 mb-6 px-8 py-6 rounded-t-xl">
+          <LogoWordmark />
+        </div>
+        <p className="text-sm text-gray-500 -mt-2 mb-6">
           Monitoring progres servis unit multi-cabang
         </p>
 
@@ -101,7 +104,7 @@ export function LoginScreen() {
             type="submit"
             disabled={submitting}
             className={cn(
-              "w-full rounded-lg bg-brand text-gray-900 font-semibold py-2.5 text-sm transition hover:brightness-95",
+              "w-full rounded-lg bg-brand text-primary font-semibold py-2.5 text-sm transition hover:brightness-95",
               submitting && "opacity-60"
             )}
           >
@@ -115,7 +118,7 @@ export function LoginScreen() {
             setError(null);
             setInfo(null);
           }}
-          className="w-full text-center text-sm text-gray-500 mt-4 hover:text-gray-800"
+          className="w-full text-center text-sm text-gray-500 mt-4 hover:text-primary"
         >
           {mode === "login"
             ? "Belum punya akun? Daftar"

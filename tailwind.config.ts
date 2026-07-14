@@ -6,7 +6,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brand: "#F5C200",
+        brand: "#F9C227",
+        primary: "#3B1856",
+        "primary-dark": "#28103C",
         "main-bg": "#F4F5F7",
         danger: "#E5484D",
       },
