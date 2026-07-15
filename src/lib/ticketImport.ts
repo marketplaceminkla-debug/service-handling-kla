@@ -12,6 +12,7 @@ export interface ParsedTicketRow {
   estimasi: string;
   posisi_unit: string;
   keterangan: string;
+  tanggal_masuk: string;
 }
 
 export interface ImportResult {
@@ -38,11 +39,22 @@ const HEADER_ALIASES: Record<string, ColumnKey> = {
   estimasi: "estimasi",
   "posisi unit": "posisi_unit",
   keterangan: "keterangan",
+  "tanggal masuk": "tanggal_masuk",
 };
+
+function excelCellToDateString(value: unknown): string {
+  if (value instanceof Date) {
+    const y = value.getUTCFullYear();
+    const m = String(value.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(value.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  return String(value ?? "").trim();
+}
 
 export async function parseExcelFile(file: File): Promise<ParsedTicketRow[]> {
   const buffer = await file.arrayBuffer();
-  const workbook = XLSX.read(buffer, { type: "array" });
+  const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   const rows: unknown[][] = XLSX.utils.sheet_to_json(sheet, {
     header: 1,
@@ -86,10 +98,15 @@ export async function parseExcelFile(file: File): Promise<ParsedTicketRow[]> {
       estimasi: "",
       posisi_unit: "",
       keterangan: "",
+      tanggal_masuk: "",
     };
     Object.entries(columnMap).forEach(([colIdx, key]) => {
       if (!key) return;
-      parsed[key] = String(row[Number(colIdx)] ?? "").trim();
+      const cell = row[Number(colIdx)];
+      parsed[key] =
+        key === "tanggal_masuk"
+          ? excelCellToDateString(cell)
+          : String(cell ?? "").trim();
     });
 
     if (parsed.no_service) result.push(parsed);
@@ -233,6 +250,7 @@ export async function importTickets(
     };
     const createdAt = createdAtFromLamaHari(row.lama_hari);
     if (createdAt) fields.created_at = createdAt;
+    if (row.tanggal_masuk) fields.tanggal_masuk = row.tanggal_masuk;
 
     const existingId = existingMap.get(row.no_service.trim());
     if (existingId) {

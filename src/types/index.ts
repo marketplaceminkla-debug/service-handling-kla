@@ -43,6 +43,7 @@ export interface ServiceTicket {
   estimasi: string | null;
   posisi_unit: string | null;
   keterangan: string | null;
+  tanggal_masuk: string | null;
   reported_by: string | null;
   reported_by_name: string | null;
   created_at: string;

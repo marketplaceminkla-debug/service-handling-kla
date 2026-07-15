@@ -26,7 +26,7 @@ import {
   type TicketUpdate,
   type TicketWithBranch,
 } from "@/types";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDate, formatDateOnly } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
   baru: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
@@ -74,6 +74,7 @@ export function TicketDetail({
     estimasi: string;
     posisi_unit: string;
     keterangan: string;
+    tanggal_masuk: string;
   } | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -87,6 +88,7 @@ export function TicketDetail({
     estimasi: t.estimasi ?? "",
     posisi_unit: t.posisi_unit ?? "",
     keterangan: t.keterangan ?? "",
+    tanggal_masuk: t.tanggal_masuk ?? "",
   });
 
   const load = async (openEdit?: boolean) => {
@@ -140,6 +142,7 @@ export function TicketDetail({
         estimasi: edit.estimasi.trim() || null,
         posisi_unit: edit.posisi_unit.trim() || null,
         keterangan: edit.keterangan.trim() || null,
+        tanggal_masuk: edit.tanggal_masuk || null,
       });
       setIsEditing(false);
       await load();
@@ -252,6 +255,14 @@ export function TicketDetail({
             <dl className="grid grid-cols-2 gap-4 mt-5 text-sm">
               <Detail label="Kode Barang" value={ticket.kode_barang} />
               <Detail label="Serial Number" value={ticket.serial_number} />
+              <Detail
+                label="Tanggal Masuk"
+                value={
+                  ticket.tanggal_masuk
+                    ? formatDateOnly(ticket.tanggal_masuk)
+                    : "-"
+                }
+              />
               <Detail label="Estimasi" value={ticket.estimasi || "-"} />
               <Detail label="Posisi Unit" value={ticket.posisi_unit || "-"} />
               <Detail
@@ -380,6 +391,19 @@ export function TicketDetail({
                   <PosisiUnitSelect
                     value={edit.posisi_unit}
                     onChange={(v) => setEdit({ ...edit, posisi_unit: v })}
+                  />
+                </EditField>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <EditField label="Tanggal Masuk">
+                  <input
+                    type="date"
+                    value={edit.tanggal_masuk}
+                    onChange={(e) =>
+                      setEdit({ ...edit, tanggal_masuk: e.target.value })
+                    }
+                    className="input dark:[color-scheme:dark]"
                   />
                 </EditField>
               </div>

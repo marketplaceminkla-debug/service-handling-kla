@@ -36,6 +36,7 @@ export function InlineEditTicketRow({
   const [estimasi, setEstimasi] = useState(ticket.estimasi ?? "");
   const [posisiUnit, setPosisiUnit] = useState(ticket.posisi_unit ?? "");
   const [keterangan, setKeterangan] = useState(ticket.keterangan ?? "");
+  const [tanggalMasuk, setTanggalMasuk] = useState(ticket.tanggal_masuk ?? "");
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +55,7 @@ export function InlineEditTicketRow({
         estimasi: estimasi.trim() || null,
         posisi_unit: posisiUnit.trim() || null,
         keterangan: keterangan.trim() || null,
+        tanggal_masuk: tanggalMasuk || null,
       });
       onSaved();
     } catch (err) {
@@ -140,6 +142,14 @@ export function InlineEditTicketRow({
           </Field>
           <Field label="Posisi Unit">
             <PosisiUnitSelect value={posisiUnit} onChange={setPosisiUnit} />
+          </Field>
+          <Field label="Tanggal Masuk">
+            <input
+              type="date"
+              value={tanggalMasuk}
+              onChange={(e) => setTanggalMasuk(e.target.value)}
+              className="input dark:[color-scheme:dark]"
+            />
           </Field>
           <div className="col-span-2 md:col-span-4">
             <Field label="Keterangan">
