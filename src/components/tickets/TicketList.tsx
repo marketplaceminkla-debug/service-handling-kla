@@ -1,7 +1,17 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Search, Pencil, MessageCircle, History, FileDown } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Pencil,
+  MessageCircle,
+  History,
+  FileDown,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+} from "lucide-react";
 import { ageLevel, listTickets, ticketAgeDays, isStuck } from "@/lib/tickets";
 import { listBranches } from "@/lib/branches";
 import { listBrands } from "@/lib/brands";
@@ -57,6 +67,7 @@ export function TicketList({
   const [showBulkPanel, setShowBulkPanel] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showExportPanel, setShowExportPanel] = useState(false);
+  const [ageSort, setAgeSort] = useState<"asc" | "desc" | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -89,6 +100,20 @@ export function TicketList({
       return true;
     });
   }, [tickets, search, branchFilter, brandFilter, kategoriFilter, statusFilter]);
+
+  const sorted = useMemo(() => {
+    if (!ageSort) return filtered;
+    const copy = [...filtered];
+    copy.sort((a, b) => {
+      const diff = ticketAgeDays(a) - ticketAgeDays(b);
+      return ageSort === "asc" ? diff : -diff;
+    });
+    return copy;
+  }, [filtered, ageSort]);
+
+  const toggleAgeSort = () => {
+    setAgeSort((prev) => (prev === "desc" ? "asc" : "desc"));
+  };
 
   const selectedTickets = useMemo(
     () => tickets.filter((t) => selectedIds.has(t.id)),
@@ -283,12 +308,23 @@ export function TicketList({
               <th className="px-4 py-3 font-medium">Kode Barang</th>
               <th className="px-4 py-3 font-medium">Posisi Unit</th>
               <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Lama di Servis</th>
+              <th className="px-4 py-3 font-medium">
+                <button
+                  onClick={toggleAgeSort}
+                  className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-100"
+                  title="Urutkan berdasarkan lama di servis"
+                >
+                  Lama di Servis
+                  {ageSort === "desc" && <ArrowDown size={13} />}
+                  {ageSort === "asc" && <ArrowUp size={13} />}
+                  {!ageSort && <ArrowUpDown size={13} className="opacity-40" />}
+                </button>
+              </th>
               <th className="px-4 py-3 font-medium"></th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((t) => (
+            {sorted.map((t) => (
               <Fragment key={t.id}>
                 <tr
                   className={cn(
