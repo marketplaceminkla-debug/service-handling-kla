@@ -30,7 +30,7 @@ import {
 } from "@/types";
 
 const POSISI_UNIT_EMPTY = "__kosong__";
-import { cn } from "@/lib/utils";
+import { cn, formatDateOnly } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
   baru: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
@@ -71,7 +71,10 @@ export function TicketList({
   const [showBulkPanel, setShowBulkPanel] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showExportPanel, setShowExportPanel] = useState(false);
-  const [ageSort, setAgeSort] = useState<"asc" | "desc" | null>(null);
+  const [sort, setSort] = useState<{
+    field: "age" | "tanggal_masuk";
+    dir: "asc" | "desc";
+  } | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -121,17 +124,30 @@ export function TicketList({
   ]);
 
   const sorted = useMemo(() => {
-    if (!ageSort) return filtered;
+    if (!sort) return filtered;
     const copy = [...filtered];
     copy.sort((a, b) => {
-      const diff = ticketAgeDays(a) - ticketAgeDays(b);
-      return ageSort === "asc" ? diff : -diff;
+      let diff = 0;
+      if (sort.field === "age") {
+        diff = ticketAgeDays(a) - ticketAgeDays(b);
+      } else {
+        const av = a.tanggal_masuk;
+        const bv = b.tanggal_masuk;
+        if (!av && !bv) diff = 0;
+        else if (!av) diff = 1;
+        else if (!bv) diff = -1;
+        else diff = av < bv ? -1 : av > bv ? 1 : 0;
+      }
+      return sort.dir === "asc" ? diff : -diff;
     });
     return copy;
-  }, [filtered, ageSort]);
+  }, [filtered, sort]);
 
-  const toggleAgeSort = () => {
-    setAgeSort((prev) => (prev === "desc" ? "asc" : "desc"));
+  const toggleSort = (field: "age" | "tanggal_masuk") => {
+    setSort((prev) => {
+      if (!prev || prev.field !== field) return { field, dir: "desc" };
+      return { field, dir: prev.dir === "desc" ? "asc" : "desc" };
+    });
   };
 
   const selectedTickets = useMemo(
@@ -334,6 +350,16 @@ export function TicketList({
                 />
               </th>
               <th className="px-4 py-3 font-medium">No. Service</th>
+              <th className="px-4 py-3 font-medium">
+                <button
+                  onClick={() => toggleSort("tanggal_masuk")}
+                  className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-100"
+                  title="Urutkan berdasarkan tanggal masuk"
+                >
+                  Tanggal Masuk
+                  <SortIcon active={sort?.field === "tanggal_masuk"} dir={sort?.dir} />
+                </button>
+              </th>
               <th className="px-4 py-3 font-medium">Cabang</th>
               <th className="px-4 py-3 font-medium">Brand</th>
               <th className="px-4 py-3 font-medium">Kategori</th>
@@ -342,14 +368,12 @@ export function TicketList({
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">
                 <button
-                  onClick={toggleAgeSort}
+                  onClick={() => toggleSort("age")}
                   className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-100"
                   title="Urutkan berdasarkan lama di servis"
                 >
                   Lama di Servis
-                  {ageSort === "desc" && <ArrowDown size={13} />}
-                  {ageSort === "asc" && <ArrowUp size={13} />}
-                  {!ageSort && <ArrowUpDown size={13} className="opacity-40" />}
+                  <SortIcon active={sort?.field === "age"} dir={sort?.dir} />
                 </button>
               </th>
               <th className="px-4 py-3 font-medium"></th>
@@ -374,6 +398,9 @@ export function TicketList({
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
                     {t.no_service}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                    {t.tanggal_masuk ? formatDateOnly(t.tanggal_masuk) : "-"}
                   </td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                     {t.branch?.name ?? "-"}
@@ -446,7 +473,7 @@ export function TicketList({
                     ticket={t}
                     branches={branches}
                     brands={brands}
-                    colSpan={10}
+                    colSpan={11}
                     onCancel={() => setEditingId(null)}
                     onSaved={() => {
                       setEditingId(null);
@@ -459,7 +486,7 @@ export function TicketList({
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={10}
+                  colSpan={11}
                   className="px-4 py-8 text-center text-gray-400 dark:text-gray-500"
                 >
                   Belum ada tiket.
@@ -471,4 +498,15 @@ export function TicketList({
       </div>
     </div>
   );
+}
+
+function SortIcon({
+  active,
+  dir,
+}: {
+  active?: boolean;
+  dir?: "asc" | "desc";
+}) {
+  if (!active) return <ArrowUpDown size={13} className="opacity-40" />;
+  return dir === "asc" ? <ArrowUp size={13} /> : <ArrowDown size={13} />;
 }

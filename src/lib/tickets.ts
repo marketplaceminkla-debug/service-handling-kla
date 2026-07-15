@@ -92,6 +92,7 @@ export async function createTicket(input: {
   estimasi?: string | null;
   posisi_unit?: string | null;
   keterangan?: string | null;
+  tanggal_masuk?: string | null;
   reported_by: string | null;
   reported_by_name: string | null;
 }): Promise<ServiceTicket> {
@@ -107,6 +108,7 @@ export async function createTicket(input: {
       estimasi: input.estimasi || null,
       posisi_unit: input.posisi_unit || null,
       keterangan: input.keterangan || null,
+      tanggal_masuk: input.tanggal_masuk || null,
       reported_by: input.reported_by,
       reported_by_name: input.reported_by_name,
     })
@@ -130,6 +132,7 @@ export async function updateTicket(
       | "estimasi"
       | "posisi_unit"
       | "keterangan"
+      | "tanggal_masuk"
     >
   >
 ): Promise<ServiceTicket> {

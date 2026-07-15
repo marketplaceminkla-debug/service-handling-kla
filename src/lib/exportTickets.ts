@@ -11,6 +11,17 @@ function formatDateOnly(iso: string | null) {
   });
 }
 
+function formatDateOnlyDateCol(dateStr: string | null) {
+  if (!dateStr) return "-";
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 export function exportTicketsToExcel(
   tickets: TicketWithBranch[],
   filename: string
@@ -18,6 +29,7 @@ export function exportTicketsToExcel(
   const rows = tickets.map((t, i) => ({
     "#": i + 1,
     "No. Service": t.no_service,
+    "Tanggal Masuk": formatDateOnlyDateCol(t.tanggal_masuk),
     Kategori: KATEGORI_LABEL[t.kategori],
     Cabang: t.branch?.name ?? "-",
     Brand: t.brand?.name ?? "-",
@@ -38,6 +50,7 @@ export function exportTicketsToExcel(
   worksheet["!cols"] = [
     { wch: 4 },
     { wch: 20 },
+    { wch: 14 },
     { wch: 10 },
     { wch: 16 },
     { wch: 14 },

@@ -31,6 +31,7 @@ export function NewTicketForm({
   const [estimasi, setEstimasi] = useState("");
   const [posisiUnit, setPosisiUnit] = useState("");
   const [keterangan, setKeterangan] = useState("");
+  const [tanggalMasuk, setTanggalMasuk] = useState("");
 
   useEffect(() => {
     Promise.all([listBranches(), listBrands()])
@@ -56,6 +57,7 @@ export function NewTicketForm({
         estimasi: estimasi.trim() || null,
         posisi_unit: posisiUnit.trim() || null,
         keterangan: keterangan.trim() || null,
+        tanggal_masuk: tanggalMasuk || null,
         reported_by: profile?.id ?? null,
         reported_by_name: profile?.full_name || profile?.email || null,
       });
@@ -139,6 +141,14 @@ export function NewTicketForm({
         </div>
 
         <div className="grid grid-cols-2 gap-4">
+          <Field label="Tanggal Masuk">
+            <input
+              type="date"
+              value={tanggalMasuk}
+              onChange={(e) => setTanggalMasuk(e.target.value)}
+              className="input dark:[color-scheme:dark]"
+            />
+          </Field>
           <Field label="Estimasi">
             <input
               value={estimasi}

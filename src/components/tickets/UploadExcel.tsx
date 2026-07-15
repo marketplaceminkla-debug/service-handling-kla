@@ -178,6 +178,7 @@ export function UploadExcel() {
               <thead className="sticky top-0 bg-white dark:bg-gray-800">
                 <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
                   <th className="px-4 py-2 font-medium">No. Service</th>
+                  <th className="px-4 py-2 font-medium">Tanggal Masuk</th>
                   <th className="px-4 py-2 font-medium">Cabang</th>
                   <th className="px-4 py-2 font-medium">Kode Barang</th>
                   <th className="px-4 py-2 font-medium">Status</th>
@@ -194,6 +195,9 @@ export function UploadExcel() {
                   >
                     <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">
                       {r.no_service}
+                    </td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-300">
+                      {r.tanggal_masuk || "-"}
                     </td>
                     <td className="px-4 py-2 text-gray-600 dark:text-gray-300">
                       {r.branch_name}

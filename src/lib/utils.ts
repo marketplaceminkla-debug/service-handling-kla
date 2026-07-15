@@ -14,3 +14,13 @@ export function formatDate(iso: string) {
     minute: "2-digit",
   });
 }
+
+export function formatDateOnly(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
