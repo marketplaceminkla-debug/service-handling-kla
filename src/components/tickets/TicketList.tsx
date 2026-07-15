@@ -11,6 +11,7 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  CalendarRange,
 } from "lucide-react";
 import { ageLevel, listTickets, ticketAgeDays, isStuck } from "@/lib/tickets";
 import { listBranches } from "@/lib/branches";
@@ -309,34 +310,39 @@ export function TicketList({
           ))}
           <option value={POSISI_UNIT_EMPTY}>- Belum diisi -</option>
         </select>
-        <div className="flex items-center gap-2">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            max={dateTo || undefined}
-            className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]"
-          />
-          <span className="text-sm text-gray-400 dark:text-gray-500">s/d</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            min={dateFrom || undefined}
-            className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]"
-          />
-          {(dateFrom || dateTo) && (
-            <button
-              onClick={() => {
-                setDateFrom("");
-                setDateTo("");
-              }}
-              className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-            >
-              Reset
-            </button>
-          )}
+      </div>
+
+      <div className="flex items-center gap-3 mb-4 bg-yellow-50 dark:bg-yellow-900/10 border border-brand/40 rounded-lg px-4 py-2.5 flex-wrap">
+        <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
+          <CalendarRange size={16} className="text-brand" />
+          Filter Tanggal Masuk
         </div>
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          max={dateTo || undefined}
+          className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]"
+        />
+        <span className="text-sm text-gray-400 dark:text-gray-500">s/d</span>
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          min={dateFrom || undefined}
+          className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]"
+        />
+        {(dateFrom || dateTo) && (
+          <button
+            onClick={() => {
+              setDateFrom("");
+              setDateTo("");
+            }}
+            className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+          >
+            Reset
+          </button>
+        )}
       </div>
 
       {showExportPanel && (
