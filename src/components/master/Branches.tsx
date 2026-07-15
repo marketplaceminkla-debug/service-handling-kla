@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { createBranch, listBranches, updateBranch } from "@/lib/branches";
 import type { Branch } from "@/types";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,12 @@ export function BranchesPanel() {
   const [code, setCode] = useState("");
   const [waNumber, setWaNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editCode, setEditCode] = useState("");
+  const [editWa, setEditWa] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -54,14 +60,31 @@ export function BranchesPanel() {
     }
   };
 
-  const editWaNumber = async (b: Branch) => {
-    const value = window.prompt(`No. WhatsApp untuk ${b.name}`, b.wa_number ?? "");
-    if (value === null) return;
+  const startEdit = (b: Branch) => {
+    setEditingId(b.id);
+    setEditName(b.name);
+    setEditCode(b.code);
+    setEditWa(b.wa_number ?? "");
+    setError(null);
+  };
+
+  const cancelEdit = () => setEditingId(null);
+
+  const saveEdit = async (id: string) => {
+    setSavingEdit(true);
+    setError(null);
     try {
-      await updateBranch(b.id, { wa_number: value || null });
+      await updateBranch(id, {
+        name: editName.trim(),
+        code: editCode.trim(),
+        wa_number: editWa.trim() || null,
+      });
+      setEditingId(null);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal mengubah cabang");
+      setError(err instanceof Error ? err.message : "Gagal menyimpan perubahan");
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -151,48 +174,108 @@ export function BranchesPanel() {
               </tr>
             </thead>
             <tbody>
-              {branches.map((b) => (
-                <tr
-                  key={b.id}
-                  className="border-b border-gray-50 dark:border-gray-700/60 last:border-0"
-                >
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                    {b.name}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                    {b.code}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                    {b.wa_number || "-"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={cn(
-                        "text-xs font-medium px-2 py-1 rounded",
-                        b.is_active
-                          ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
-                      )}
-                    >
-                      {b.is_active ? "Aktif" : "Nonaktif"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right space-x-3">
-                    <button
-                      onClick={() => editWaNumber(b)}
-                      className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      Ubah WA
-                    </button>
-                    <button
-                      onClick={() => toggleActive(b)}
-                      className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      {b.is_active ? "Nonaktifkan" : "Aktifkan"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {branches.map((b) => {
+                const isEditing = editingId === b.id;
+                return (
+                  <tr
+                    key={b.id}
+                    className="border-b border-gray-50 dark:border-gray-700/60 last:border-0"
+                  >
+                    {isEditing ? (
+                      <>
+                        <td className="px-4 py-2.5">
+                          <input
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand"
+                          />
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <input
+                            value={editCode}
+                            onChange={(e) => setEditCode(e.target.value)}
+                            className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand"
+                          />
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <input
+                            value={editWa}
+                            onChange={(e) => setEditWa(e.target.value)}
+                            className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand"
+                          />
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <span
+                            className={cn(
+                              "text-xs font-medium px-2 py-1 rounded",
+                              b.is_active
+                                ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                                : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                            )}
+                          >
+                            {b.is_active ? "Aktif" : "Nonaktif"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-right space-x-3 whitespace-nowrap">
+                          <button
+                            onClick={cancelEdit}
+                            className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                          >
+                            Batal
+                          </button>
+                          <button
+                            onClick={() => saveEdit(b.id)}
+                            disabled={savingEdit}
+                            className="text-xs font-semibold text-gray-900 bg-brand px-2.5 py-1 rounded hover:brightness-95 disabled:opacity-60"
+                          >
+                            {savingEdit ? "Menyimpan..." : "Simpan"}
+                          </button>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
+                          {b.name}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                          {b.code}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                          {b.wa_number || "-"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={cn(
+                              "text-xs font-medium px-2 py-1 rounded",
+                              b.is_active
+                                ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                                : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                            )}
+                          >
+                            {b.is_active ? "Aktif" : "Nonaktif"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right space-x-3 whitespace-nowrap">
+                          <button
+                            onClick={() => startEdit(b)}
+                            title="Edit cabang"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                          >
+                            <Pencil size={12} />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => toggleActive(b)}
+                            className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                          >
+                            {b.is_active ? "Nonaktifkan" : "Aktifkan"}
+                          </button>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                );
+              })}
               {branches.length === 0 && (
                 <tr>
                   <td
