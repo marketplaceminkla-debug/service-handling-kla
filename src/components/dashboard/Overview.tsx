@@ -137,68 +137,6 @@ export function Overview() {
 
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
         <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 dark:border-gray-700">
-          <Building2 size={18} className="text-gray-400 dark:text-gray-500" />
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-            Tiket per Cabang ({branchStats.length})
-          </h3>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
-                <th className="px-5 py-2 font-medium">Cabang</th>
-                <th className="px-5 py-2 font-medium">Total Tiket</th>
-                <th className="px-5 py-2 font-medium">Aktif (belum selesai)</th>
-                <th className="px-5 py-2 font-medium">Urgent</th>
-              </tr>
-            </thead>
-            <tbody>
-              {branchStats.map((b) => (
-                <tr
-                  key={b.name}
-                  className="border-b border-gray-50 dark:border-gray-700/60 last:border-0"
-                >
-                  <td className="px-5 py-2.5 font-medium text-gray-900 dark:text-gray-100">
-                    {b.name}
-                  </td>
-                  <td className="px-5 py-2.5 text-gray-600 dark:text-gray-300">
-                    {b.total}
-                  </td>
-                  <td className="px-5 py-2.5 text-gray-600 dark:text-gray-300">
-                    {b.aktif}
-                  </td>
-                  <td className="px-5 py-2.5">
-                    <span
-                      className={cn(
-                        "text-xs font-medium px-2 py-1 rounded",
-                        b.urgent > 0
-                          ? "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300"
-                          : "text-gray-400 dark:text-gray-500"
-                      )}
-                    >
-                      {b.urgent}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-              {branchStats.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-5 py-6 text-center text-gray-400 dark:text-gray-500"
-                  >
-                    Belum ada tiket.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
-        <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 dark:border-gray-700">
           <MapPin size={18} className="text-gray-400 dark:text-gray-500" />
           <h3 className="font-semibold text-gray-900 dark:text-gray-100">
             Tiket per Posisi Unit
@@ -293,6 +231,68 @@ export function Overview() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+        <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+          <Building2 size={18} className="text-gray-400 dark:text-gray-500" />
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+            Tiket per Cabang ({branchStats.length})
+          </h3>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
+                <th className="px-5 py-2 font-medium">Cabang</th>
+                <th className="px-5 py-2 font-medium">Total Tiket</th>
+                <th className="px-5 py-2 font-medium">Aktif (belum selesai)</th>
+                <th className="px-5 py-2 font-medium">Urgent</th>
+              </tr>
+            </thead>
+            <tbody>
+              {branchStats.map((b) => (
+                <tr
+                  key={b.name}
+                  className="border-b border-gray-50 dark:border-gray-700/60 last:border-0"
+                >
+                  <td className="px-5 py-2.5 font-medium text-gray-900 dark:text-gray-100">
+                    {b.name}
+                  </td>
+                  <td className="px-5 py-2.5 text-gray-600 dark:text-gray-300">
+                    {b.total}
+                  </td>
+                  <td className="px-5 py-2.5 text-gray-600 dark:text-gray-300">
+                    {b.aktif}
+                  </td>
+                  <td className="px-5 py-2.5">
+                    <span
+                      className={cn(
+                        "text-xs font-medium px-2 py-1 rounded",
+                        b.urgent > 0
+                          ? "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                          : "text-gray-400 dark:text-gray-500"
+                      )}
+                    >
+                      {b.urgent}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {branchStats.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-5 py-6 text-center text-gray-400 dark:text-gray-500"
+                  >
+                    Belum ada tiket.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
