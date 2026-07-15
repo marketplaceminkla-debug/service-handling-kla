@@ -20,6 +20,7 @@ import { InlineEditTicketRow } from "@/components/tickets/InlineEditTicketRow";
 import { ExportExcelPanel } from "@/components/tickets/ExportExcelPanel";
 import {
   KATEGORI_LABEL,
+  POSISI_UNIT_OPTIONS,
   STATUS_LABEL,
   type Branch,
   type Brand,
@@ -27,6 +28,8 @@ import {
   type TicketStatus,
   type TicketWithBranch,
 } from "@/types";
+
+const POSISI_UNIT_EMPTY = "__kosong__";
 import { cn } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -62,6 +65,7 @@ export function TicketList({
   const [brandFilter, setBrandFilter] = useState("");
   const [kategoriFilter, setKategoriFilter] = useState<TicketKategori | "">("");
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "">("");
+  const [posisiUnitFilter, setPosisiUnitFilter] = useState("");
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkPanel, setShowBulkPanel] = useState(false);
@@ -90,6 +94,13 @@ export function TicketList({
       if (brandFilter && t.brand_id !== brandFilter) return false;
       if (kategoriFilter && t.kategori !== kategoriFilter) return false;
       if (statusFilter && t.status !== statusFilter) return false;
+      if (posisiUnitFilter) {
+        if (posisiUnitFilter === POSISI_UNIT_EMPTY) {
+          if (t.posisi_unit) return false;
+        } else if (t.posisi_unit !== posisiUnitFilter) {
+          return false;
+        }
+      }
       if (
         q &&
         !`${t.no_service} ${t.kode_barang} ${t.serial_number}`
@@ -99,7 +110,15 @@ export function TicketList({
         return false;
       return true;
     });
-  }, [tickets, search, branchFilter, brandFilter, kategoriFilter, statusFilter]);
+  }, [
+    tickets,
+    search,
+    branchFilter,
+    brandFilter,
+    kategoriFilter,
+    statusFilter,
+    posisiUnitFilter,
+  ]);
 
   const sorted = useMemo(() => {
     if (!ageSort) return filtered;
@@ -244,6 +263,19 @@ export function TicketList({
               {label}
             </option>
           ))}
+        </select>
+        <select
+          value={posisiUnitFilter}
+          onChange={(e) => setPosisiUnitFilter(e.target.value)}
+          className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+        >
+          <option value="">Semua Posisi Unit</option>
+          {POSISI_UNIT_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+          <option value={POSISI_UNIT_EMPTY}>- Belum diisi -</option>
         </select>
       </div>
 
