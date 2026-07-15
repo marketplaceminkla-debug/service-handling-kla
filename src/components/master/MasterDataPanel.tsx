@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { BranchesPanel } from "@/components/master/Branches";
 import { BrandsPanel } from "@/components/master/Brands";
+import { ProductCatalogPanel } from "@/components/master/ProductCatalog";
 import { cn } from "@/lib/utils";
 
-type Tab = "cabang" | "brand";
+type Tab = "cabang" | "brand" | "merk";
 
 export function MasterDataPanel() {
   const [tab, setTab] = useState<Tab>("cabang");
@@ -17,6 +18,7 @@ export function MasterDataPanel() {
           [
             ["cabang", "Cabang"],
             ["brand", "Brand"],
+            ["merk", "Database Merk"],
           ] as [Tab, string][]
         ).map(([value, label]) => (
           <button
@@ -34,7 +36,9 @@ export function MasterDataPanel() {
         ))}
       </div>
 
-      {tab === "cabang" ? <BranchesPanel /> : <BrandsPanel />}
+      {tab === "cabang" && <BranchesPanel />}
+      {tab === "brand" && <BrandsPanel />}
+      {tab === "merk" && <ProductCatalogPanel />}
     </div>
   );
 }

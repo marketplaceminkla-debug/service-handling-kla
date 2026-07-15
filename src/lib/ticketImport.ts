@@ -148,6 +148,20 @@ function slugCode(name: string): string {
   return cleaned.slice(0, 12) || "CAB";
 }
 
+async function resolveBrandMap(): Promise<Map<string, string>> {
+  const { data, error } = await supabase
+    .from("product_catalog")
+    .select("nama_barang, brand_id")
+    .not("brand_id", "is", null);
+  if (error) throw error;
+
+  const map = new Map<string, string>();
+  (data ?? []).forEach((row) => {
+    if (row.brand_id) map.set(row.nama_barang.trim().toLowerCase(), row.brand_id);
+  });
+  return map;
+}
+
 async function resolveBranchIds(
   names: string[]
 ): Promise<{ map: Record<string, string>; created: string[] }> {
@@ -210,15 +224,19 @@ export async function importTickets(
   const { map: branchMap, created: branchesCreated } = await resolveBranchIds(
     branchNames
   );
+  const brandMap = await resolveBrandMap();
 
   const noServiceList = uniqueRows.map((r) => r.no_service.trim());
   const { data: existingTickets, error: existingError } = await supabase
     .from("service_tickets")
-    .select("id, no_service")
+    .select("id, no_service, brand_id")
     .in("no_service", noServiceList);
   if (existingError) throw existingError;
   const existingMap = new Map(
     (existingTickets ?? []).map((t) => [t.no_service, t.id])
+  );
+  const existingBrandMap = new Map(
+    (existingTickets ?? []).map((t) => [t.id, t.brand_id])
   );
 
   const toInsert: Record<string, unknown>[] = [];
@@ -252,12 +270,19 @@ export async function importTickets(
     if (createdAt) fields.created_at = createdAt;
     if (row.tanggal_masuk) fields.tanggal_masuk = row.tanggal_masuk;
 
+    const lookedUpBrandId =
+      brandMap.get(row.kode_barang.trim().toLowerCase()) ?? null;
+
     const existingId = existingMap.get(row.no_service.trim());
     if (existingId) {
+      if (!existingBrandMap.get(existingId) && lookedUpBrandId) {
+        fields.brand_id = lookedUpBrandId;
+      }
       toUpdate.push({ id: existingId, patch: fields });
     } else {
       toInsert.push({
         ...fields,
+        brand_id: lookedUpBrandId,
         no_service: row.no_service.trim(),
         kategori,
         reported_by: reportedBy.id,

@@ -27,6 +27,20 @@ export interface Brand {
   created_at: string;
 }
 
+export interface ProductCatalogEntry {
+  id: string;
+  nama_barang: string;
+  kode_barang: string | null;
+  brand_id: string | null;
+  keterangan: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProductCatalogEntryWithBrand extends ProductCatalogEntry {
+  brand: Pick<Brand, "id" | "name" | "wa_number"> | null;
+}
+
 export type TicketKategori = "stok" | "user";
 export type TicketStatus = "baru" | "diproses" | "tunggu_sparepart" | "selesai";
 export type FollowUpChannel = "cabang" | "brand";
