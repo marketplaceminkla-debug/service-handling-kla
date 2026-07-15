@@ -81,9 +81,10 @@ export function Overview() {
   const POSISI_UNSET = "__belum_diisi__";
   const posisiStatsMap = new Map<string, { label: string; total: number }>();
   tickets.forEach((t) => {
-    const key = t.posisi_unit || POSISI_UNSET;
+    const normalized = t.posisi_unit?.trim().toUpperCase() || "";
+    const key = normalized || POSISI_UNSET;
     const entry = posisiStatsMap.get(key) ?? {
-      label: t.posisi_unit || "Belum Diisi",
+      label: normalized || "Belum Diisi",
       total: 0,
     };
     entry.total += 1;
@@ -96,7 +97,7 @@ export function Overview() {
     ? tickets.filter((t) =>
         expandedPosisi === POSISI_UNSET
           ? !t.posisi_unit
-          : t.posisi_unit === expandedPosisi
+          : t.posisi_unit?.trim().toUpperCase() === expandedPosisi
       )
     : [];
 

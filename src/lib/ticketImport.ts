@@ -125,6 +125,14 @@ function normalizeOptional(value: string): string | null {
   return v === "" || v === "-" ? null : v;
 }
 
+/** Posisi Unit disimpan uppercase biar konsisten sama pilihan di dropdown
+ * (IPK, SERVICE CENTER, SUPPLIER, CABANG) — data lama dari Excel sering
+ * beda-beda casing. */
+function normalizePosisiUnit(value: string): string | null {
+  const v = normalizeOptional(value);
+  return v ? v.toUpperCase() : null;
+}
+
 /** Sistem internal export "Lama di-service" sebagai jumlah hari sejak SRV
  * dibuka — backdate created_at kita biar umur tiket tetap akurat walau
  * baru pertama kali diimpor ke sini. */
@@ -270,7 +278,7 @@ export async function importTickets(
       serial_number: normalizeRequired(row.serial_number),
       status: mapStatus(row.status_raw),
       estimasi: normalizeOptional(row.estimasi),
-      posisi_unit: normalizeOptional(row.posisi_unit),
+      posisi_unit: normalizePosisiUnit(row.posisi_unit),
       keterangan: normalizeOptional(row.keterangan),
       updated_at: new Date().toISOString(),
     };

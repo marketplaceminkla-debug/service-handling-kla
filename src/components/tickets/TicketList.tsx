@@ -111,7 +111,10 @@ export function TicketList({
       if (posisiUnitFilter) {
         if (posisiUnitFilter === POSISI_UNIT_EMPTY) {
           if (t.posisi_unit) return false;
-        } else if (t.posisi_unit !== posisiUnitFilter) {
+        } else if (
+          t.posisi_unit?.trim().toUpperCase() !==
+          posisiUnitFilter.trim().toUpperCase()
+        ) {
           return false;
         }
       }
