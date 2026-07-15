@@ -74,6 +74,8 @@ export function TicketList({
   const [kategoriFilter, setKategoriFilter] = useState<TicketKategori | "">("");
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "">("");
   const [posisiUnitFilter, setPosisiUnitFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkPanel, setShowBulkPanel] = useState(false);
@@ -112,6 +114,10 @@ export function TicketList({
           return false;
         }
       }
+      if (dateFrom && (!t.tanggal_masuk || t.tanggal_masuk < dateFrom))
+        return false;
+      if (dateTo && (!t.tanggal_masuk || t.tanggal_masuk > dateTo))
+        return false;
       if (
         q &&
         !`${t.no_service} ${t.kode_barang} ${t.serial_number}`
@@ -129,6 +135,8 @@ export function TicketList({
     kategoriFilter,
     statusFilter,
     posisiUnitFilter,
+    dateFrom,
+    dateTo,
   ]);
 
   const sorted = useMemo(() => {
@@ -301,6 +309,34 @@ export function TicketList({
           ))}
           <option value={POSISI_UNIT_EMPTY}>- Belum diisi -</option>
         </select>
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            max={dateTo || undefined}
+            className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]"
+          />
+          <span className="text-sm text-gray-400 dark:text-gray-500">s/d</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            min={dateFrom || undefined}
+            className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]"
+          />
+          {(dateFrom || dateTo) && (
+            <button
+              onClick={() => {
+                setDateFrom("");
+                setDateTo("");
+              }}
+              className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+            >
+              Reset
+            </button>
+          )}
+        </div>
       </div>
 
       {showExportPanel && (
