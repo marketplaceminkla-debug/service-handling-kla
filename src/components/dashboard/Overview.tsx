@@ -3,15 +3,23 @@
 import { useEffect, useState } from "react";
 import { Building2, ChevronDown, ChevronRight, Flame, MapPin } from "lucide-react";
 import { ageLevel, listTickets, ticketAgeDays, URGENT_AGE_DAYS } from "@/lib/tickets";
-import { STATUS_LABEL, type TicketWithBranch } from "@/types";
+import { STATUS_LABEL, type TicketStatus, type TicketWithBranch } from "@/types";
 import { cn } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
   baru: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
   diproses:
     "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
+  masuk_service:
+    "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300",
+  pengecekan: "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300",
   tunggu_sparepart:
     "bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300",
+  done_service: "bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300",
+  keluar_service:
+    "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300",
+  diterima_cabang:
+    "bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300",
   selesai: "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300",
 };
 
@@ -39,13 +47,13 @@ export function Overview() {
     return <p className="text-sm text-danger">{error}</p>;
   }
 
-  const counts = {
-    baru: tickets.filter((t) => t.status === "baru").length,
-    diproses: tickets.filter((t) => t.status === "diproses").length,
-    tunggu_sparepart: tickets.filter((t) => t.status === "tunggu_sparepart")
-      .length,
-    selesai: tickets.filter((t) => t.status === "selesai").length,
-  };
+  const counts = (Object.keys(STATUS_LABEL) as TicketStatus[]).reduce(
+    (acc, status) => {
+      acc[status] = tickets.filter((t) => t.status === status).length;
+      return acc;
+    },
+    {} as Record<TicketStatus, number>
+  );
 
   const urgentTickets = tickets.filter((t) => ageLevel(t) === "urgent");
 
@@ -101,7 +109,7 @@ export function Overview() {
         Ringkasan progres tiket servis semua cabang yang bisa kamu akses.
       </p>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8">
         {(Object.keys(STATUS_LABEL) as (keyof typeof STATUS_LABEL)[]).map(
           (status) => (
             <div

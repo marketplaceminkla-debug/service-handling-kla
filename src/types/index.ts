@@ -42,7 +42,16 @@ export interface ProductCatalogEntryWithBrand extends ProductCatalogEntry {
 }
 
 export type TicketKategori = "stok" | "user";
-export type TicketStatus = "baru" | "diproses" | "tunggu_sparepart" | "selesai";
+export type TicketStatus =
+  | "baru"
+  | "diproses"
+  | "masuk_service"
+  | "pengecekan"
+  | "tunggu_sparepart"
+  | "done_service"
+  | "keluar_service"
+  | "diterima_cabang"
+  | "selesai";
 export type FollowUpChannel = "cabang" | "brand";
 
 export interface ServiceTicket {
@@ -85,7 +94,12 @@ export interface TicketUpdate {
 export const STATUS_LABEL: Record<TicketStatus, string> = {
   baru: "Baru",
   diproses: "Diproses",
-  tunggu_sparepart: "Tunggu Sparepart",
+  masuk_service: "Masuk Service",
+  pengecekan: "Pengecekan",
+  tunggu_sparepart: "Tunggu Spare Part",
+  done_service: "Done Service",
+  keluar_service: "Keluar Service",
+  diterima_cabang: "Diterima Cabang",
   selesai: "Selesai",
 };
 
