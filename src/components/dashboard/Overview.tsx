@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Building2, Flame } from "lucide-react";
+import { Building2, ChevronDown, ChevronRight, Flame, MapPin } from "lucide-react";
 import { ageLevel, listTickets, ticketAgeDays, URGENT_AGE_DAYS } from "@/lib/tickets";
 import { STATUS_LABEL, type TicketWithBranch } from "@/types";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ export function Overview() {
   const [tickets, setTickets] = useState<TicketWithBranch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedPosisi, setExpandedPosisi] = useState<string | null>(null);
 
   useEffect(() => {
     listTickets()
@@ -68,6 +69,28 @@ export function Overview() {
   const branchStats = Array.from(branchStatsMap.values()).sort(
     (a, b) => b.total - a.total
   );
+
+  const POSISI_UNSET = "__belum_diisi__";
+  const posisiStatsMap = new Map<string, { label: string; total: number }>();
+  tickets.forEach((t) => {
+    const key = t.posisi_unit || POSISI_UNSET;
+    const entry = posisiStatsMap.get(key) ?? {
+      label: t.posisi_unit || "Belum Diisi",
+      total: 0,
+    };
+    entry.total += 1;
+    posisiStatsMap.set(key, entry);
+  });
+  const posisiStats = Array.from(posisiStatsMap.entries())
+    .map(([key, v]) => ({ key, ...v }))
+    .sort((a, b) => b.total - a.total);
+  const expandedTickets = expandedPosisi
+    ? tickets.filter((t) =>
+        expandedPosisi === POSISI_UNSET
+          ? !t.posisi_unit
+          : t.posisi_unit === expandedPosisi
+      )
+    : [];
 
   return (
     <div>
@@ -164,6 +187,104 @@ export function Overview() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+        <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+          <MapPin size={18} className="text-gray-400 dark:text-gray-500" />
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+            Tiket per Posisi Unit
+          </h3>
+          <span className="text-xs text-gray-400 dark:text-gray-500">
+            klik buat lihat detail unitnya
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-5">
+          {posisiStats.map((p) => {
+            const isOpen = expandedPosisi === p.key;
+            return (
+              <button
+                key={p.key}
+                onClick={() => setExpandedPosisi(isOpen ? null : p.key)}
+                className={cn(
+                  "text-left rounded-lg border p-4 transition",
+                  isOpen
+                    ? "border-brand bg-yellow-50 dark:bg-yellow-900/20"
+                    : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {p.label}
+                  </p>
+                  {isOpen ? (
+                    <ChevronDown size={15} className="text-gray-400" />
+                  ) : (
+                    <ChevronRight size={15} className="text-gray-400" />
+                  )}
+                </div>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
+                  {p.total}
+                </p>
+              </button>
+            );
+          })}
+          {posisiStats.length === 0 && (
+            <p className="text-sm text-gray-400 dark:text-gray-500 col-span-full">
+              Belum ada tiket.
+            </p>
+          )}
+        </div>
+
+        {expandedPosisi && (
+          <div className="border-t border-gray-100 dark:border-gray-700">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
+                    <th className="px-5 py-2 font-medium">No. Service</th>
+                    <th className="px-5 py-2 font-medium">Kode Barang</th>
+                    <th className="px-5 py-2 font-medium">Serial Number</th>
+                    <th className="px-5 py-2 font-medium">Cabang</th>
+                    <th className="px-5 py-2 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expandedTickets.map((t) => (
+                    <tr
+                      key={t.id}
+                      className="border-b border-gray-50 dark:border-gray-700/60 last:border-0"
+                    >
+                      <td className="px-5 py-2.5 font-medium text-gray-900 dark:text-gray-100">
+                        {t.no_service}
+                      </td>
+                      <td className="px-5 py-2.5 text-gray-600 dark:text-gray-300">
+                        {t.kode_barang}
+                      </td>
+                      <td className="px-5 py-2.5 text-gray-600 dark:text-gray-300">
+                        {t.serial_number}
+                      </td>
+                      <td className="px-5 py-2.5 text-gray-600 dark:text-gray-300">
+                        {t.branch?.name ?? "-"}
+                      </td>
+                      <td className="px-5 py-2.5">
+                        <span
+                          className={cn(
+                            "text-xs font-medium px-2 py-1 rounded",
+                            STATUS_COLORS[t.status]
+                          )}
+                        >
+                          {STATUS_LABEL[t.status]}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
