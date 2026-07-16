@@ -144,17 +144,11 @@ function createdAtFromLamaHari(raw: string): string | null {
 
 function mapStatus(raw: string): TicketStatus {
   const s = raw.toLowerCase();
-  if (s.includes("diterima cabang")) return "diterima_cabang";
-  if (s.includes("keluar service") || s.includes("keluar servis"))
-    return "keluar_service";
   if (s.includes("done service") || s.includes("done servis"))
     return "done_service";
   if (s.includes("selesai") || s.includes("done") || s.includes("completed"))
     return "selesai";
   if (s.includes("sparepart") || s.includes("spare part")) return "tunggu_sparepart";
-  if (s.includes("pengecekan") || s.includes("checking")) return "pengecekan";
-  if (s.includes("masuk service") || s.includes("masuk servis"))
-    return "masuk_service";
   if (s.includes("baru") || s.includes("new")) return "baru";
   return "diproses";
 }
