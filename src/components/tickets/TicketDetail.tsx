@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, MessageCircle, Pencil } from "lucide-react";
+import { ArrowLeft, MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import {
   addFollowUp,
   buildFollowUpMessage,
+  deleteFollowUp,
   getTicket,
   listTicketUpdates,
   ticketAgeDays,
+  updateFollowUp,
   updateTicket,
   waLink,
 } from "@/lib/tickets";
@@ -62,7 +64,13 @@ export function TicketDetail({
 
   const [note, setNote] = useState("");
   const [statusTo, setStatusTo] = useState<TicketStatus>("diproses");
+  const [manualDate, setManualDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const [editingUpdateId, setEditingUpdateId] = useState<string | null>(null);
+  const [editUpdateNote, setEditUpdateNote] = useState("");
+  const [editUpdateDate, setEditUpdateDate] = useState("");
+  const [savingUpdateEdit, setSavingUpdateEdit] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [edit, setEdit] = useState<{
@@ -184,6 +192,7 @@ export function TicketDetail({
         channel,
         created_by: profile?.id ?? null,
         created_by_name: profile?.full_name || profile?.email || null,
+        created_at: manualDate ? new Date(manualDate).toISOString() : null,
       });
 
       if (channel && target?.wa_number) {
@@ -192,11 +201,52 @@ export function TicketDetail({
       }
 
       setNote("");
+      setManualDate("");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal menyimpan follow-up");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const startEditUpdate = (u: TicketUpdate) => {
+    setEditingUpdateId(u.id);
+    setEditUpdateNote(u.note);
+    setEditUpdateDate(toDatetimeLocalValue(u.created_at));
+    setError(null);
+  };
+
+  const cancelEditUpdate = () => setEditingUpdateId(null);
+
+  const saveEditUpdate = async (id: string) => {
+    setSavingUpdateEdit(true);
+    setError(null);
+    try {
+      await updateFollowUp(id, {
+        note: editUpdateNote.trim(),
+        created_at: editUpdateDate
+          ? new Date(editUpdateDate).toISOString()
+          : null,
+      });
+      setEditingUpdateId(null);
+      await load();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Gagal menyimpan perubahan"
+      );
+    } finally {
+      setSavingUpdateEdit(false);
+    }
+  };
+
+  const handleDeleteUpdate = async (id: string) => {
+    if (!confirm("Hapus entry follow-up ini?")) return;
+    try {
+      await deleteFollowUp(id);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal menghapus follow-up");
     }
   };
 
@@ -465,22 +515,31 @@ export function TicketDetail({
         )}
       </div>
 
-      {ticket.status !== "selesai" && !isEditing && (
+      {!isEditing && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
             Tambah Follow-up
           </h3>
-          <select
-            value={statusTo}
-            onChange={(e) => setStatusTo(e.target.value as TicketStatus)}
-            className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-brand"
-          >
-            {Object.entries(STATUS_LABEL).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-wrap gap-3 mb-3">
+            <select
+              value={statusTo}
+              onChange={(e) => setStatusTo(e.target.value as TicketStatus)}
+              className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+            >
+              {Object.entries(STATUS_LABEL).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <input
+              type="datetime-local"
+              value={manualDate}
+              onChange={(e) => setManualDate(e.target.value)}
+              title="Kosongkan buat pakai waktu sekarang"
+              className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]"
+            />
+          </div>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -529,32 +588,85 @@ export function TicketDetail({
           </p>
         ) : (
           <ul className="divide-y divide-gray-100 dark:divide-gray-700">
-            {updates.map((u) => (
-              <li key={u.id} className="px-5 py-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {u.created_by_name || "Sistem"}
-                    {u.channel && (
-                      <span className="ml-2 text-[11px] font-medium text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/30 px-1.5 py-0.5 rounded">
-                        {CHANNEL_LABEL[u.channel]}
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">
-                    {formatDate(u.created_at)}
-                  </p>
-                </div>
-                {u.status_from && u.status_to && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {STATUS_LABEL[u.status_from as TicketStatus]} →{" "}
-                    {STATUS_LABEL[u.status_to as TicketStatus]}
-                  </p>
-                )}
-                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                  {u.note}
-                </p>
-              </li>
-            ))}
+            {updates.map((u) => {
+              const isEditingUpdate = editingUpdateId === u.id;
+              return (
+                <li key={u.id} className="px-5 py-4">
+                  {isEditingUpdate ? (
+                    <div className="space-y-2">
+                      <input
+                        type="datetime-local"
+                        value={editUpdateDate}
+                        onChange={(e) => setEditUpdateDate(e.target.value)}
+                        className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]"
+                      />
+                      <textarea
+                        value={editUpdateNote}
+                        onChange={(e) => setEditUpdateNote(e.target.value)}
+                        rows={2}
+                        className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+                      />
+                      <div className="flex justify-end gap-3">
+                        <button
+                          onClick={cancelEditUpdate}
+                          className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          onClick={() => saveEditUpdate(u.id)}
+                          disabled={savingUpdateEdit}
+                          className="text-xs font-semibold text-gray-900 bg-brand px-2.5 py-1 rounded hover:brightness-95 disabled:opacity-60"
+                        >
+                          {savingUpdateEdit ? "Menyimpan..." : "Simpan"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {u.created_by_name || "Sistem"}
+                          {u.channel && (
+                            <span className="ml-2 text-[11px] font-medium text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/30 px-1.5 py-0.5 rounded">
+                              {CHANNEL_LABEL[u.channel]}
+                            </span>
+                          )}
+                        </p>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <p className="text-xs text-gray-400 dark:text-gray-500">
+                            {formatDate(u.created_at)}
+                          </p>
+                          <button
+                            onClick={() => startEditUpdate(u)}
+                            title="Edit follow-up"
+                            className="text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100"
+                          >
+                            <Pencil size={13} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUpdate(u.id)}
+                            title="Hapus follow-up"
+                            className="text-gray-400 dark:text-gray-500 hover:text-danger"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                      {u.status_from && u.status_to && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          {STATUS_LABEL[u.status_from as TicketStatus]} →{" "}
+                          {STATUS_LABEL[u.status_to as TicketStatus]}
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                        {u.note}
+                      </p>
+                    </>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -567,10 +679,19 @@ function nextStatus(status: TicketStatus): TicketStatus {
     "baru",
     "diproses",
     "tunggu_sparepart",
+    "done_service",
     "selesai",
   ];
   const idx = order.indexOf(status);
   return order[Math.min(idx + 1, order.length - 1)];
+}
+
+function toDatetimeLocalValue(iso: string) {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
 }
 
 function Detail({ label, value }: { label: string; value: string }) {
