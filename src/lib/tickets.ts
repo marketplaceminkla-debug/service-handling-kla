@@ -166,6 +166,7 @@ export async function addFollowUp(input: {
   channel: FollowUpChannel | null;
   created_by: string | null;
   created_by_name: string | null;
+  created_at?: string | null;
 }): Promise<void> {
   const { error: updateError } = await supabase.from("ticket_updates").insert({
     ticket_id: input.ticket_id,
@@ -175,15 +176,17 @@ export async function addFollowUp(input: {
     channel: input.channel,
     created_by: input.created_by,
     created_by_name: input.created_by_name,
+    ...(input.created_at ? { created_at: input.created_at } : {}),
   });
   if (updateError) throw updateError;
 
+  const timestamp = input.created_at || new Date().toISOString();
   const patch: Partial<ServiceTicket> = {
     status: input.status_to,
-    updated_at: new Date().toISOString(),
+    updated_at: timestamp,
   };
   if (input.status_to === "selesai") {
-    patch.resolved_at = new Date().toISOString();
+    patch.resolved_at = timestamp;
   }
 
   const { error: ticketError } = await supabase
@@ -191,4 +194,23 @@ export async function addFollowUp(input: {
     .update(patch)
     .eq("id", input.ticket_id);
   if (ticketError) throw ticketError;
+}
+
+export async function updateFollowUp(
+  id: string,
+  patch: { note: string; created_at?: string | null }
+): Promise<void> {
+  const { error } = await supabase
+    .from("ticket_updates")
+    .update({
+      note: patch.note,
+      ...(patch.created_at ? { created_at: patch.created_at } : {}),
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteFollowUp(id: string): Promise<void> {
+  const { error } = await supabase.from("ticket_updates").delete().eq("id", id);
+  if (error) throw error;
 }
