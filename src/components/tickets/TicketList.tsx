@@ -19,14 +19,13 @@ import { listBrands } from "@/lib/brands";
 import { BulkFollowUpPanel } from "@/components/tickets/BulkFollowUpPanel";
 import { InlineEditTicketRow } from "@/components/tickets/InlineEditTicketRow";
 import { ExportExcelPanel } from "@/components/tickets/ExportExcelPanel";
+import { MultiSelectFilter } from "@/components/tickets/MultiSelectFilter";
 import {
   KATEGORI_LABEL,
   POSISI_UNIT_OPTIONS,
   STATUS_LABEL,
   type Branch,
   type Brand,
-  type TicketKategori,
-  type TicketStatus,
   type TicketWithBranch,
 } from "@/types";
 
@@ -63,11 +62,11 @@ export function TicketList({
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
-  const [branchFilter, setBranchFilter] = useState("");
-  const [brandFilter, setBrandFilter] = useState("");
-  const [kategoriFilter, setKategoriFilter] = useState<TicketKategori | "">("");
-  const [statusFilter, setStatusFilter] = useState<TicketStatus | "">("");
-  const [posisiUnitFilter, setPosisiUnitFilter] = useState("");
+  const [branchFilter, setBranchFilter] = useState<string[]>([]);
+  const [brandFilter, setBrandFilter] = useState<string[]>([]);
+  const [kategoriFilter, setKategoriFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [posisiUnitFilter, setPosisiUnitFilter] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
@@ -76,7 +75,7 @@ export function TicketList({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showExportPanel, setShowExportPanel] = useState(false);
   const [sort, setSort] = useState<{
-    field: "age" | "tanggal_masuk";
+    field: "age" | "tanggal_masuk" | "no_service";
     dir: "asc" | "desc";
   } | null>(null);
 
@@ -97,19 +96,24 @@ export function TicketList({
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return tickets.filter((t) => {
-      if (branchFilter && t.branch_id !== branchFilter) return false;
-      if (brandFilter && t.brand_id !== brandFilter) return false;
-      if (kategoriFilter && t.kategori !== kategoriFilter) return false;
-      if (statusFilter && t.status !== statusFilter) return false;
-      if (posisiUnitFilter) {
-        if (posisiUnitFilter === POSISI_UNIT_EMPTY) {
-          if (t.posisi_unit) return false;
-        } else if (
-          t.posisi_unit?.trim().toUpperCase() !==
-          posisiUnitFilter.trim().toUpperCase()
-        ) {
-          return false;
-        }
+      if (branchFilter.length > 0 && !branchFilter.includes(t.branch_id))
+        return false;
+      if (
+        brandFilter.length > 0 &&
+        (!t.brand_id || !brandFilter.includes(t.brand_id))
+      )
+        return false;
+      if (kategoriFilter.length > 0 && !kategoriFilter.includes(t.kategori))
+        return false;
+      if (statusFilter.length > 0 && !statusFilter.includes(t.status))
+        return false;
+      if (posisiUnitFilter.length > 0) {
+        const matches = posisiUnitFilter.some((f) =>
+          f === POSISI_UNIT_EMPTY
+            ? !t.posisi_unit
+            : t.posisi_unit?.trim().toUpperCase() === f.trim().toUpperCase()
+        );
+        if (!matches) return false;
       }
       if (dateFrom && (!t.tanggal_masuk || t.tanggal_masuk < dateFrom))
         return false;
@@ -143,6 +147,10 @@ export function TicketList({
       let diff = 0;
       if (sort.field === "age") {
         diff = ticketAgeDays(a) - ticketAgeDays(b);
+      } else if (sort.field === "no_service") {
+        diff = a.no_service.localeCompare(b.no_service, undefined, {
+          numeric: true,
+        });
       } else {
         const av = a.tanggal_masuk;
         const bv = b.tanggal_masuk;
@@ -156,7 +164,7 @@ export function TicketList({
     return copy;
   }, [filtered, sort]);
 
-  const toggleSort = (field: "age" | "tanggal_masuk") => {
+  const toggleSort = (field: "age" | "tanggal_masuk" | "no_service") => {
     setSort((prev) => {
       if (!prev || prev.field !== field) return { field, dir: "desc" };
       return { field, dir: prev.dir === "desc" ? "asc" : "desc" };
@@ -243,69 +251,45 @@ export function TicketList({
             className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
-        <select
-          value={branchFilter}
-          onChange={(e) => setBranchFilter(e.target.value)}
-          className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
-        >
-          <option value="">Semua Cabang</option>
-          {branches.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={brandFilter}
-          onChange={(e) => setBrandFilter(e.target.value)}
-          className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
-        >
-          <option value="">Semua Brand</option>
-          {brands.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={kategoriFilter}
-          onChange={(e) =>
-            setKategoriFilter(e.target.value as TicketKategori | "")
-          }
-          className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
-        >
-          <option value="">Semua Kategori</option>
-          {Object.entries(KATEGORI_LABEL).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as TicketStatus | "")}
-          className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
-        >
-          <option value="">Semua Status</option>
-          {Object.entries(STATUS_LABEL).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={posisiUnitFilter}
-          onChange={(e) => setPosisiUnitFilter(e.target.value)}
-          className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
-        >
-          <option value="">Semua Posisi Unit</option>
-          {POSISI_UNIT_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-          <option value={POSISI_UNIT_EMPTY}>- Belum diisi -</option>
-        </select>
+        <MultiSelectFilter
+          label="Semua Cabang"
+          options={branches.map((b) => ({ value: b.id, label: b.name }))}
+          selected={branchFilter}
+          onChange={setBranchFilter}
+        />
+        <MultiSelectFilter
+          label="Semua Brand"
+          options={brands.map((b) => ({ value: b.id, label: b.name }))}
+          selected={brandFilter}
+          onChange={setBrandFilter}
+        />
+        <MultiSelectFilter
+          label="Semua Kategori"
+          options={Object.entries(KATEGORI_LABEL).map(([value, label]) => ({
+            value,
+            label,
+          }))}
+          selected={kategoriFilter}
+          onChange={setKategoriFilter}
+        />
+        <MultiSelectFilter
+          label="Semua Status"
+          options={Object.entries(STATUS_LABEL).map(([value, label]) => ({
+            value,
+            label,
+          }))}
+          selected={statusFilter}
+          onChange={setStatusFilter}
+        />
+        <MultiSelectFilter
+          label="Semua Posisi Unit"
+          options={[
+            ...POSISI_UNIT_OPTIONS.map((opt) => ({ value: opt, label: opt })),
+            { value: POSISI_UNIT_EMPTY, label: "- Belum diisi -" },
+          ]}
+          selected={posisiUnitFilter}
+          onChange={setPosisiUnitFilter}
+        />
       </div>
 
       <div className="flex items-center gap-3 mb-4 bg-yellow-50 dark:bg-yellow-900/10 border border-brand/40 rounded-lg px-4 py-2.5 flex-wrap">
@@ -395,7 +379,16 @@ export function TicketList({
                   className="rounded border-gray-300 dark:border-gray-600"
                 />
               </th>
-              <th className="px-4 py-3 font-medium">No. Service</th>
+              <th className="px-4 py-3 font-medium">
+                <button
+                  onClick={() => toggleSort("no_service")}
+                  className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-100"
+                  title="Urutkan berdasarkan No. Service"
+                >
+                  No. Service
+                  <SortIcon active={sort?.field === "no_service"} dir={sort?.dir} />
+                </button>
+              </th>
               <th className="px-4 py-3 font-medium">
                 <button
                   onClick={() => toggleSort("tanggal_masuk")}
