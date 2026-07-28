@@ -75,7 +75,9 @@ export function UploadExcel() {
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
         Upload Excel dari sistem internal. Cuma No. Service yang belum ada
         yang bakal ditambahin sebagai tiket baru — yang sudah ada di
-        database tidak akan ditimpa/diubah.
+        database tidak akan ditimpa/diubah. Tiket baru otomatis mulai dari
+        status <strong>Baru</strong> dan posisi unit <strong>CABANG</strong>{" "}
+        (kolom Status/Posisi Unit di Excel cuma buat preview, gak dipakai).
       </p>
 
       <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-6">
