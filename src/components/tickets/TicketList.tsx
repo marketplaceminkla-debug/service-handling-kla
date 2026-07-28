@@ -465,6 +465,9 @@ export function TicketList({
                     >
                       {STATUS_LABEL[t.status]}
                     </span>
+                    <div className="text-[11px] text-gray-400 dark:text-gray-500 mt-1 whitespace-nowrap">
+                      Update: {formatDateOnly(t.updated_at.slice(0, 10))}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     {(() => {

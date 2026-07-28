@@ -5,6 +5,7 @@ import {
   Building2,
   Users,
   UploadCloud,
+  ClipboardCopy,
 } from "lucide-react";
 import type { Role } from "@/types";
 
@@ -12,6 +13,7 @@ export type PanelKey =
   | "dashboard"
   | "tickets"
   | "upload"
+  | "followup"
   | "master"
   | "akun";
 
@@ -39,6 +41,12 @@ export const NAV_ITEMS: NavItem[] = [
     key: "upload",
     label: "Upload Servis",
     icon: UploadCloud,
+    roles: ["super_admin", "admin", "staff"],
+  },
+  {
+    key: "followup",
+    label: "Follow Up Cabang",
+    icon: ClipboardCopy,
     roles: ["super_admin", "admin", "staff"],
   },
   {

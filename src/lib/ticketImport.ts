@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 import { supabase } from "@/lib/supabase";
-import type { TicketKategori, TicketStatus } from "@/types";
+import type { TicketKategori } from "@/types";
 
 export interface ParsedTicketRow {
   no_service: string;
@@ -125,14 +125,6 @@ function normalizeOptional(value: string): string | null {
   return v === "" || v === "-" ? null : v;
 }
 
-/** Posisi Unit disimpan uppercase biar konsisten sama pilihan di dropdown
- * (IPK, SERVICE CENTER, SUPPLIER, CABANG) — data lama dari Excel sering
- * beda-beda casing. */
-function normalizePosisiUnit(value: string): string | null {
-  const v = normalizeOptional(value);
-  return v ? v.toUpperCase() : null;
-}
-
 /** Sistem internal export "Lama di-service" sebagai jumlah hari sejak SRV
  * dibuka — backdate created_at kita biar umur tiket tetap akurat walau
  * baru pertama kali diimpor ke sini. */
@@ -142,20 +134,29 @@ function createdAtFromLamaHari(raw: string): string | null {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 }
 
-function mapStatus(raw: string): TicketStatus {
-  const s = raw.toLowerCase();
-  if (s.includes("done service") || s.includes("done servis"))
-    return "done_service";
-  if (s.includes("selesai") || s.includes("done") || s.includes("completed"))
-    return "selesai";
-  if (s.includes("sparepart") || s.includes("spare part")) return "tunggu_sparepart";
-  if (s.includes("baru") || s.includes("new")) return "baru";
-  return "diproses";
+/** Tanggal Masuk = hari ini dikurangi "Lama di-service", bukan kolom tanggal
+ * mentah dari Excel — biar selalu konsisten sama umur tiket yang dihitung
+ * dari created_at (lihat createdAtFromLamaHari). */
+function tanggalMasukFromLamaHari(raw: string): string | null {
+  const days = parseInt(raw, 10);
+  if (Number.isNaN(days) || days < 0) return null;
+  const d = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function slugCode(name: string): string {
   const cleaned = name.toUpperCase().replace(/[^A-Z0-9]/g, "");
   return cleaned.slice(0, 12) || "CAB";
+}
+
+/** Kolektor nama barang di Excel/Database Merk suka beda-beda spasi
+ * (mis. dua spasi berturut-turut) — disamain biar matching brand-nya
+ * gak gagal gara-gara whitespace doang. */
+function normalizeProductName(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 async function resolveBrandMap(): Promise<Map<string, string>> {
@@ -167,7 +168,7 @@ async function resolveBrandMap(): Promise<Map<string, string>> {
 
   const map = new Map<string, string>();
   (data ?? []).forEach((row) => {
-    if (row.brand_id) map.set(row.nama_barang.trim().toLowerCase(), row.brand_id);
+    if (row.brand_id) map.set(normalizeProductName(row.nama_barang), row.brand_id);
   });
   return map;
 }
@@ -272,18 +273,23 @@ export async function importTickets(
       branch_id: branchId,
       kode_barang: normalizeRequired(row.kode_barang),
       serial_number: normalizeRequired(row.serial_number),
-      status: mapStatus(row.status_raw),
+      // Tiket baru selalu mulai dari status "Baru" & posisi "CABANG" —
+      // status/posisi di Excel sistem internal gak dipakai, karena workflow
+      // di sini dikelola sendiri lewat follow-up, bukan ngikut data mentah.
+      status: "baru",
+      posisi_unit: "CABANG",
       estimasi: normalizeOptional(row.estimasi),
-      posisi_unit: normalizePosisiUnit(row.posisi_unit),
       keterangan: normalizeOptional(row.keterangan),
       updated_at: new Date().toISOString(),
     };
     const createdAt = createdAtFromLamaHari(row.lama_hari);
     if (createdAt) fields.created_at = createdAt;
-    if (row.tanggal_masuk) fields.tanggal_masuk = row.tanggal_masuk;
+    const tanggalMasuk =
+      tanggalMasukFromLamaHari(row.lama_hari) ?? (row.tanggal_masuk || null);
+    if (tanggalMasuk) fields.tanggal_masuk = tanggalMasuk;
 
     const lookedUpBrandId =
-      brandMap.get(row.kode_barang.trim().toLowerCase()) ?? null;
+      brandMap.get(normalizeProductName(row.kode_barang)) ?? null;
 
     toInsert.push({
       ...fields,

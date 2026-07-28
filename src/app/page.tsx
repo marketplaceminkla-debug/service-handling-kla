@@ -9,6 +9,7 @@ import { navForRole, type PanelKey } from "@/components/layout/nav-config";
 import { Overview } from "@/components/dashboard/Overview";
 import { TicketsPanel } from "@/components/tickets/TicketsPanel";
 import { UploadExcel } from "@/components/tickets/UploadExcel";
+import { FollowUpCabangPanel } from "@/components/tickets/FollowUpCabangPanel";
 import { MasterDataPanel } from "@/components/master/MasterDataPanel";
 import { KelolaAkun } from "@/components/layout/KelolaAkun";
 
@@ -37,6 +38,7 @@ export default function Home() {
         {panel === "dashboard" && <Overview />}
         {panel === "tickets" && <TicketsPanel />}
         {panel === "upload" && <UploadExcel />}
+        {panel === "followup" && <FollowUpCabangPanel />}
         {panel === "master" && <MasterDataPanel />}
         {panel === "akun" && <KelolaAkun />}
       </main>

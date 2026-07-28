@@ -63,6 +63,16 @@ export function buildFollowUpMessage(
   return message;
 }
 
+export function buildPosisiUnitDraftMessage(
+  branchName: string,
+  items: Pick<ServiceTicket, "no_service" | "serial_number">[]
+) {
+  const list = items
+    .map((t, i) => `${i + 1}. ${t.no_service} - ${t.serial_number}`)
+    .join("\n");
+  return `Halo ${branchName}, tolong dibantu update posisi unit dibawah ini:\n\n${list}`;
+}
+
 export async function listTickets(): Promise<TicketWithBranch[]> {
   const { data, error } = await supabase
     .from("service_tickets")

@@ -281,14 +281,19 @@ export function TicketDetail({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                "text-xs font-medium px-2.5 py-1 rounded",
-                STATUS_COLORS[ticket.status]
-              )}
-            >
-              {STATUS_LABEL[ticket.status]}
-            </span>
+            <div className="flex flex-col items-end gap-1">
+              <span
+                className={cn(
+                  "text-xs font-medium px-2.5 py-1 rounded",
+                  STATUS_COLORS[ticket.status]
+                )}
+              >
+                {STATUS_LABEL[ticket.status]}
+              </span>
+              <span className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                Terakhir update: {formatDate(ticket.updated_at)}
+              </span>
+            </div>
             {!isEditing && (
               <button
                 onClick={startEdit}
