@@ -73,8 +73,9 @@ export function UploadExcel() {
         Upload Servis
       </h2>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-        Upload Excel dari sistem internal. No. Service yang sudah ada bakal
-        di-update statusnya, yang belum ada bakal jadi tiket baru.
+        Upload Excel dari sistem internal. Cuma No. Service yang belum ada
+        yang bakal ditambahin sebagai tiket baru — yang sudah ada di
+        database tidak akan ditimpa/diubah.
       </p>
 
       <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-6">
@@ -132,8 +133,8 @@ export function UploadExcel() {
               Import selesai
             </div>
             <p className="mt-1">
-              {result.totalRows} baris terbaca · {result.created} tiket baru ·{" "}
-              {result.updated} tiket ter-update
+              {result.totalRows} baris terbaca · {result.created} tiket baru
+              ditambahkan
               {result.branchesCreated.length > 0 &&
                 ` · ${result.branchesCreated.length} cabang baru otomatis dibuat (${result.branchesCreated.join(", ")})`}
             </p>
