@@ -87,6 +87,14 @@ export interface TicketUpdate {
   created_at: string;
 }
 
+export interface FollowUpHistoryEntry extends TicketUpdate {
+  ticket:
+    | (Pick<ServiceTicket, "id" | "no_service" | "serial_number" | "kode_barang"> & {
+        branch: Pick<Branch, "id" | "name"> | null;
+      })
+    | null;
+}
+
 export const STATUS_LABEL: Record<TicketStatus, string> = {
   baru: "Baru",
   diproses: "Diproses",

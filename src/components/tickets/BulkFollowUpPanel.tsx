@@ -1,15 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { Check, Copy, Send, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { addFollowUp, buildFollowUpMessage, waLink } from "@/lib/tickets";
 import {
-  STATUS_LABEL,
-  type FollowUpChannel,
-  type TicketStatus,
-  type TicketWithBranch,
-} from "@/types";
+  addFollowUp,
+  buildPosisiUnitDraftMessage,
+  waLink,
+} from "@/lib/tickets";
+import type { TicketWithBranch } from "@/types";
 
 function commonValue<T>(values: (T | null)[]): T | null {
   if (values.length === 0) return null;
@@ -28,149 +27,157 @@ export function BulkFollowUpPanel({
   onDone: () => void;
 }) {
   const { profile } = useAuth();
-  const [note, setNote] = useState("");
-  const [statusTo, setStatusTo] = useState<TicketStatus>("diproses");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const commonBranchId = commonValue(tickets.map((t) => t.branch_id));
   const commonBranch = commonBranchId
     ? tickets.find((t) => t.branch_id === commonBranchId)?.branch ?? null
     : null;
 
-  const commonBrandId = commonValue(tickets.map((t) => t.brand_id));
-  const commonBrand = commonBrandId
-    ? tickets.find((t) => t.brand_id === commonBrandId)?.brand ?? null
-    : null;
+  const [message, setMessage] = useState(() =>
+    buildPosisiUnitDraftMessage(commonBranch?.name ?? "Tim Cabang", tickets)
+  );
+  const [submitting, setSubmitting] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const submit = async (channel: FollowUpChannel | null) => {
-    if (!note.trim()) {
-      setError("Catatan follow-up wajib diisi.");
+  /** Dicatat sekali per aksi (Salin/Send WA) buat semua tiket terpilih —
+   * timestamp-nya disamain biar di History Follow Up kebaca sebagai satu
+   * batch, bukan entri terpisah-pisah. */
+  const recordHistory = async () => {
+    const timestamp = new Date().toISOString();
+    await Promise.all(
+      tickets.map((t) =>
+        addFollowUp({
+          ticket_id: t.id,
+          note: message.trim(),
+          status_from: t.status,
+          status_to: t.status,
+          channel: "cabang",
+          created_by: profile?.id ?? null,
+          created_by_name: profile?.full_name || profile?.email || null,
+          created_at: timestamp,
+        })
+      )
+    );
+  };
+
+  const handleCopy = async () => {
+    if (!message.trim()) {
+      setError("Teks follow-up masih kosong.");
       return;
     }
-
-    let target: { name: string; wa_number: string | null } | null = null;
-    if (channel === "cabang") target = commonBranch;
-    if (channel === "brand") target = commonBrand;
-
-    if (channel && !target) {
-      setError(
-        channel === "cabang"
-          ? "Tiket yang dipilih beda cabang — pilih tiket dari cabang yang sama dulu."
-          : "Tiket yang dipilih beda brand (atau ada yang belum diisi brand-nya) — pilih tiket dari brand yang sama dulu."
-      );
-      return;
-    }
-    if (channel && target && !target.wa_number) {
-      setError(
-        channel === "cabang"
-          ? "No. WhatsApp cabang ini belum diisi di Master Cabang."
-          : "No. WhatsApp brand ini belum diisi di Master Brand."
-      );
-      return;
-    }
-
     setSubmitting(true);
     setError(null);
     try {
-      await Promise.all(
-        tickets.map((t) =>
-          addFollowUp({
-            ticket_id: t.id,
-            note: note.trim(),
-            status_from: t.status,
-            status_to: statusTo,
-            channel,
-            created_by: profile?.id ?? null,
-            created_by_name: profile?.full_name || profile?.email || null,
-          })
-        )
+      await navigator.clipboard.writeText(message.trim());
+      await recordHistory();
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+        onDone();
+      }, 1200);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal menyalin teks");
+      setSubmitting(false);
+    }
+  };
+
+  const handleSendWa = async () => {
+    if (!message.trim()) {
+      setError("Teks follow-up masih kosong.");
+      return;
+    }
+    if (!commonBranch) {
+      setError(
+        "Tiket yang dipilih beda cabang — pilih tiket dari cabang yang sama dulu."
       );
-
-      if (channel && target?.wa_number) {
-        const message = buildFollowUpMessage(target.name, tickets, note);
-        window.open(waLink(target.wa_number, message), "_blank");
-      }
-
+      return;
+    }
+    if (!commonBranch.wa_number) {
+      setError("No. WhatsApp cabang ini belum diisi di Master Cabang.");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      await recordHistory();
+      window.open(waLink(commonBranch.wa_number, message.trim()), "_blank");
       onDone();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Gagal menyimpan follow-up"
       );
-    } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-          Follow Up {tickets.length} Tiket Terpilih
-        </h3>
-        <button
-          onClick={onClose}
-          className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
-        >
-          <X size={18} />
-        </button>
-      </div>
-
-      <select
-        value={statusTo}
-        onChange={(e) => setStatusTo(e.target.value as TicketStatus)}
-        className="text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-brand"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
       >
-        {Object.entries(STATUS_LABEL).map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
-      <textarea
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        placeholder="Catatan follow-up buat semua tiket terpilih..."
-        rows={3}
-        className="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
-      />
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+            Follow Up — {commonBranch?.name ?? "Beda Cabang"}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
+          >
+            <X size={18} />
+          </button>
+        </div>
 
-      {error && <p className="text-sm text-danger mt-2">{error}</p>}
+        <div className="p-5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            {tickets.length} tiket terpilih · teks bisa diedit dulu sebelum
+            disalin/dikirim
+          </p>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={12}
+            className="w-full text-sm font-mono rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+          />
 
-      <div className="flex flex-wrap justify-end gap-3 mt-3">
-        <button
-          onClick={() => submit(null)}
-          disabled={submitting}
-          className="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-60"
-        >
-          Simpan Catatan
-        </button>
-        <button
-          onClick={() => submit("cabang")}
-          disabled={submitting || !commonBranch}
-          title={
-            commonBranch
-              ? undefined
-              : "Tiket yang dipilih harus dari cabang yang sama"
-          }
-          className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-40"
-        >
-          <MessageCircle size={15} />
-          Follow Up ke Cabang
-        </button>
-        <button
-          onClick={() => submit("brand")}
-          disabled={submitting || !commonBrand}
-          title={
-            commonBrand
-              ? undefined
-              : "Tiket yang dipilih harus dari brand yang sama"
-          }
-          className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-40"
-        >
-          <MessageCircle size={15} />
-          Follow Up ke Brand
-        </button>
+          {error && <p className="text-sm text-danger mt-2">{error}</p>}
+
+          <div className="flex flex-wrap gap-3 mt-4">
+            <button
+              onClick={handleCopy}
+              disabled={submitting}
+              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-gray-900 bg-brand rounded-lg hover:brightness-95 disabled:opacity-60"
+            >
+              {copied ? (
+                <>
+                  <Check size={15} />
+                  Tersalin!
+                </>
+              ) : (
+                <>
+                  <Copy size={15} />
+                  Salin Teks
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleSendWa}
+              disabled={submitting || !commonBranch}
+              title={
+                commonBranch
+                  ? undefined
+                  : "Tiket yang dipilih harus dari cabang yang sama"
+              }
+              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-40"
+            >
+              <Send size={15} />
+              Send WA
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

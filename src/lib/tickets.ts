@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type {
   FollowUpChannel,
+  FollowUpHistoryEntry,
   ServiceTicket,
   TicketStatus,
   TicketUpdate,
@@ -71,6 +72,20 @@ export function buildPosisiUnitDraftMessage(
     .map((t, i) => `${i + 1}. ${t.no_service} - ${t.serial_number}`)
     .join("\n");
   return `Halo ${branchName}, tolong dibantu update posisi unit dibawah ini:\n\n${list}`;
+}
+
+/** Riwayat follow-up lintas tiket buat halaman History Follow Up — beda sama
+ * listTicketUpdates yang cuma buat satu tiket. */
+export async function listFollowUpHistory(): Promise<FollowUpHistoryEntry[]> {
+  const { data, error } = await supabase
+    .from("ticket_updates")
+    .select(
+      "*, ticket:service_tickets(id, no_service, serial_number, kode_barang, branch:branches(id, name))"
+    )
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) throw error;
+  return data as unknown as FollowUpHistoryEntry[];
 }
 
 export async function listTickets(): Promise<TicketWithBranch[]> {
