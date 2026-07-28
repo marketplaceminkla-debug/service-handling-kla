@@ -239,20 +239,22 @@ export async function importTickets(
   const noServiceList = uniqueRows.map((r) => r.no_service.trim());
   const { data: existingTickets, error: existingError } = await supabase
     .from("service_tickets")
-    .select("id, no_service, brand_id")
+    .select("id, no_service")
     .in("no_service", noServiceList);
   if (existingError) throw existingError;
-  const existingMap = new Map(
-    (existingTickets ?? []).map((t) => [t.no_service, t.id])
-  );
-  const existingBrandMap = new Map(
-    (existingTickets ?? []).map((t) => [t.id, t.brand_id])
-  );
+  const existingSet = new Set((existingTickets ?? []).map((t) => t.no_service));
 
   const toInsert: Record<string, unknown>[] = [];
-  const toUpdate: { id: string; patch: Record<string, unknown> }[] = [];
 
   for (const row of uniqueRows) {
+    if (existingSet.has(row.no_service.trim())) {
+      skipped.push({
+        no_service: row.no_service,
+        reason: "No. Service sudah ada di database, dilewati (tidak ditimpa)",
+      });
+      continue;
+    }
+
     if (!row.branch_name.trim()) {
       skipped.push({ no_service: row.no_service, reason: "Cabang kosong" });
       continue;
@@ -283,22 +285,14 @@ export async function importTickets(
     const lookedUpBrandId =
       brandMap.get(row.kode_barang.trim().toLowerCase()) ?? null;
 
-    const existingId = existingMap.get(row.no_service.trim());
-    if (existingId) {
-      if (!existingBrandMap.get(existingId) && lookedUpBrandId) {
-        fields.brand_id = lookedUpBrandId;
-      }
-      toUpdate.push({ id: existingId, patch: fields });
-    } else {
-      toInsert.push({
-        ...fields,
-        brand_id: lookedUpBrandId,
-        no_service: row.no_service.trim(),
-        kategori,
-        reported_by: reportedBy.id,
-        reported_by_name: reportedBy.name,
-      });
-    }
+    toInsert.push({
+      ...fields,
+      brand_id: lookedUpBrandId,
+      no_service: row.no_service.trim(),
+      kategori,
+      reported_by: reportedBy.id,
+      reported_by_name: reportedBy.name,
+    });
   }
 
   let created = 0;
@@ -308,15 +302,5 @@ export async function importTickets(
     created = toInsert.length;
   }
 
-  let updated = 0;
-  for (const item of toUpdate) {
-    const { error } = await supabase
-      .from("service_tickets")
-      .update(item.patch)
-      .eq("id", item.id);
-    if (error) throw error;
-    updated++;
-  }
-
-  return { totalRows: rows.length, created, updated, skipped, branchesCreated };
+  return { totalRows: rows.length, created, updated: 0, skipped, branchesCreated };
 }
