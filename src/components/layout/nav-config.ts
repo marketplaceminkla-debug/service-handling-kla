@@ -5,7 +5,7 @@ import {
   Building2,
   Users,
   UploadCloud,
-  ClipboardCopy,
+  MessageSquareText,
 } from "lucide-react";
 import type { Role } from "@/types";
 
@@ -45,8 +45,8 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     key: "followup",
-    label: "Follow Up Cabang",
-    icon: ClipboardCopy,
+    label: "History Follow Up",
+    icon: MessageSquareText,
     roles: ["super_admin", "admin", "staff"],
   },
   {
