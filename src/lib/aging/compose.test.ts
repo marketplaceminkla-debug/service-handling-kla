@@ -128,11 +128,42 @@ describe("composeAgingMessage — warn", () => {
 
     const bullets = message.split("\n").filter((l) => l.startsWith("•"));
     expect(bullets).toHaveLength(MAX_TICKETS_PER_MESSAGE);
-    expect(message).toContain("\\+5 tiket lain, lihat daftar lengkap");
+    expect(message).toContain("+5 tiket lain, lihat daftar lengkap");
   });
 
   it("returns an empty string when there is nothing to report", () => {
     expect(composeAgingMessage(group([]), "warn")).toBe("");
+  });
+});
+
+describe("composeAgingMessage — format", () => {
+  it("leaves punctuation unescaped in the default plain format", () => {
+    const message = composeAgingMessage(
+      group([ticket({ device: "Ideapad 5 2-in-1", part_eta: "30 Jul, 14.59" })]),
+      "warn"
+    );
+    expect(message).toContain("Ideapad 5 2-in-1");
+    expect(message).toContain("part ETA 30 Jul, 14.59");
+    expect(message).not.toContain("\\");
+  });
+
+  it("escapes MarkdownV2 specials when that format is requested", () => {
+    const message = composeAgingMessage(
+      group([ticket({ device: "Ideapad 5 2-in-1", part_eta: "30 Jul, 14.59" })]),
+      "warn",
+      { format: "markdownv2" }
+    );
+    expect(message).toContain("Ideapad 5 2\\-in\\-1");
+    expect(message).toContain("part ETA 30 Jul, 14\\.59");
+    // Jumlah per kelompok status ikut di-escape kurungnya.
+    expect(message).toContain("\\(1\\)");
+  });
+
+  it("appends the list link when one is given", () => {
+    const message = composeAgingMessage(group([ticket()]), "warn", {
+      listUrl: "https://app.example.com/digest",
+    });
+    expect(message).toContain("Buka daftar: https://app.example.com/digest");
   });
 });
 

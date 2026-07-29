@@ -10,6 +10,7 @@ import { Overview } from "@/components/dashboard/Overview";
 import { TicketsPanel } from "@/components/tickets/TicketsPanel";
 import { UploadExcel } from "@/components/tickets/UploadExcel";
 import { FollowUpHistoryPanel } from "@/components/tickets/FollowUpHistoryPanel";
+import { AgingDigestPanel } from "@/components/tickets/AgingDigestPanel";
 import { MasterDataPanel } from "@/components/master/MasterDataPanel";
 import { KelolaAkun } from "@/components/layout/KelolaAkun";
 
@@ -38,6 +39,7 @@ export default function Home() {
         {panel === "dashboard" && <Overview />}
         {panel === "tickets" && <TicketsPanel />}
         {panel === "upload" && <UploadExcel />}
+        {panel === "digest" && <AgingDigestPanel />}
         {panel === "followup" && <FollowUpHistoryPanel />}
         {panel === "master" && <MasterDataPanel />}
         {panel === "akun" && <KelolaAkun />}
