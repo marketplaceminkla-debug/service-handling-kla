@@ -78,12 +78,25 @@ export function buildFollowUpMessage(
   return message;
 }
 
+/** Kolom teks wajib menyimpan "-" sebagai penanda kosong (lihat
+ * normalizeRequired di ticketImport.ts), jadi "-" harus dianggap kosong
+ * juga di sini — kalau tidak, drafnya berisi baris "SRV/0001 - -". */
+function isBlank(value: string | null | undefined): boolean {
+  const v = value?.trim();
+  return !v || v === "-";
+}
+
 export function buildPosisiUnitDraftMessage(
   branchName: string,
-  items: Pick<ServiceTicket, "no_service" | "serial_number">[]
+  items: Pick<ServiceTicket, "no_service" | "serial_number" | "kode_barang">[]
 ) {
   const list = items
-    .map((t, i) => `${i + 1}. ${t.no_service} - ${t.serial_number}`)
+    .map((t, i) => {
+      const parts = [t.no_service];
+      if (!isBlank(t.kode_barang)) parts.push(t.kode_barang.trim());
+      if (!isBlank(t.serial_number)) parts.push(t.serial_number.trim());
+      return `${i + 1}. ${parts.join(" - ")}`;
+    })
     .join("\n");
   return `Halo ${branchName}, tolong dibantu update posisi unit dibawah ini:\n\n${list}`;
 }
