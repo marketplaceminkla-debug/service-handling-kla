@@ -8,11 +8,11 @@ import { cn } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
   baru: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
-  diproses:
+  dalam_pengerjaan:
     "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
-  tunggu_sparepart:
+  menunggu_part:
     "bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300",
-  done_service: "bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300",
+  siap_diambil: "bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300",
   selesai: "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300",
 };
 

@@ -80,7 +80,7 @@ export async function listFollowUpHistory(): Promise<FollowUpHistoryEntry[]> {
   const { data, error } = await supabase
     .from("ticket_updates")
     .select(
-      "*, ticket:service_tickets(id, no_service, serial_number, kode_barang, branch:branches(id, name))"
+      "*, ticket:service_tickets(id, no_service, serial_number, kode_barang, status, branch:branches(id, name))"
     )
     .order("created_at", { ascending: false })
     .limit(500);

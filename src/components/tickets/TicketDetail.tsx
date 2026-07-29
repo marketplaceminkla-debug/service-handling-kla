@@ -20,6 +20,7 @@ import { PosisiUnitSelect } from "@/components/tickets/PosisiUnitSelect";
 import {
   KATEGORI_LABEL,
   STATUS_LABEL,
+  STATUS_ORDER,
   type Branch,
   type Brand,
   type FollowUpChannel,
@@ -32,17 +33,18 @@ import { cn, formatDate, formatDateOnly } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
   baru: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
-  diproses:
+  dalam_pengerjaan:
     "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
-  tunggu_sparepart:
+  menunggu_part:
     "bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300",
-  done_service: "bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300",
+  siap_diambil: "bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300",
   selesai: "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300",
 };
 
 const CHANNEL_LABEL: Record<FollowUpChannel, string> = {
   cabang: "WA ke Cabang",
   brand: "WA ke Brand",
+  auto: "Otomatis",
 };
 
 export function TicketDetail({
@@ -63,7 +65,7 @@ export function TicketDetail({
   const [error, setError] = useState<string | null>(null);
 
   const [note, setNote] = useState("");
-  const [statusTo, setStatusTo] = useState<TicketStatus>("diproses");
+  const [statusTo, setStatusTo] = useState<TicketStatus>("dalam_pengerjaan");
   const [manualDate, setManualDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -680,15 +682,8 @@ export function TicketDetail({
 }
 
 function nextStatus(status: TicketStatus): TicketStatus {
-  const order: TicketStatus[] = [
-    "baru",
-    "diproses",
-    "tunggu_sparepart",
-    "done_service",
-    "selesai",
-  ];
-  const idx = order.indexOf(status);
-  return order[Math.min(idx + 1, order.length - 1)];
+  const idx = STATUS_ORDER.indexOf(status);
+  return STATUS_ORDER[Math.min(idx + 1, STATUS_ORDER.length - 1)];
 }
 
 function toDatetimeLocalValue(iso: string) {

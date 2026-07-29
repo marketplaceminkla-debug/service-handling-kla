@@ -1,12 +1,32 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { Bot, MessageCircle } from "lucide-react";
 import { listFollowUpHistory } from "@/lib/tickets";
 import { listBranches } from "@/lib/branches";
 import { MultiSelectFilter } from "@/components/tickets/MultiSelectFilter";
-import type { Branch, FollowUpHistoryEntry } from "@/types";
-import { formatDate } from "@/lib/utils";
+import {
+  STATUS_LABEL,
+  STATUS_ORDER,
+  type Branch,
+  type FollowUpChannel,
+  type FollowUpHistoryEntry,
+} from "@/types";
+import { cn, formatDate } from "@/lib/utils";
+
+const CHANNEL_LABEL: Record<FollowUpChannel, string> = {
+  cabang: "WA ke Cabang",
+  brand: "WA ke Brand",
+  auto: "Otomatis",
+};
+
+/** Kejaran otomatis sengaja diwarnai abu — ini pengingat internal, bukan
+ * pesan yang benar-benar dikirim ke customer. */
+const CHANNEL_STYLE: Record<FollowUpChannel, string> = {
+  cabang: "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300",
+  brand: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
+  auto: "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400",
+};
 
 interface Batch {
   key: string;
@@ -14,6 +34,7 @@ interface Batch {
   created_by_name: string | null;
   branch_name: string;
   branch_id: string | null;
+  channel: FollowUpChannel | null;
   note: string;
   entries: FollowUpHistoryEntry[];
 }
@@ -25,7 +46,7 @@ function groupIntoBatches(entries: FollowUpHistoryEntry[]): Batch[] {
   const map = new Map<string, Batch>();
   entries.forEach((e) => {
     const branchId = e.ticket?.branch?.id ?? null;
-    const key = `${e.created_at}|${branchId ?? "-"}|${e.note}`;
+    const key = `${e.created_at}|${branchId ?? "-"}|${e.channel ?? "-"}|${e.note}`;
     if (!map.has(key)) {
       map.set(key, {
         key,
@@ -33,6 +54,7 @@ function groupIntoBatches(entries: FollowUpHistoryEntry[]): Batch[] {
         created_by_name: e.created_by_name,
         branch_name: e.ticket?.branch?.name ?? "-",
         branch_id: branchId,
+        channel: e.channel,
         note: e.note,
         entries: [],
       });
@@ -48,6 +70,8 @@ export function FollowUpHistoryPanel() {
   const [entries, setEntries] = useState<FollowUpHistoryEntry[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [branchFilter, setBranchFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [channelFilter, setChannelFilter] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,10 +87,24 @@ export function FollowUpHistoryPanel() {
   }, []);
 
   const batches = useMemo(() => {
-    const all = groupIntoBatches(entries);
+    // Filter status dinilai per tiket: satu batch ikut tampil selama masih
+    // ada tiket di dalamnya yang statusnya cocok.
+    const filteredEntries = entries.filter((e) => {
+      if (
+        statusFilter.length > 0 &&
+        (!e.ticket || !statusFilter.includes(e.ticket.status))
+      )
+        return false;
+      if (channelFilter.length > 0) {
+        if (!e.channel || !channelFilter.includes(e.channel)) return false;
+      }
+      return true;
+    });
+
+    const all = groupIntoBatches(filteredEntries);
     if (branchFilter.length === 0) return all;
     return all.filter((b) => b.branch_id && branchFilter.includes(b.branch_id));
-  }, [entries, branchFilter]);
+  }, [entries, branchFilter, statusFilter, channelFilter]);
 
   if (loading)
     return (
@@ -86,12 +124,29 @@ export function FollowUpHistoryPanel() {
         kamu klik Salin Teks atau Send WA di popup follow up.
       </p>
 
-      <div className="mb-4">
+      <div className="flex flex-wrap gap-3 mb-4">
         <MultiSelectFilter
           label="Semua Cabang"
           options={branches.map((b) => ({ value: b.id, label: b.name }))}
           selected={branchFilter}
           onChange={setBranchFilter}
+        />
+        <MultiSelectFilter
+          label="Semua Status"
+          options={STATUS_ORDER.map((s) => ({
+            value: s,
+            label: STATUS_LABEL[s],
+          }))}
+          selected={statusFilter}
+          onChange={setStatusFilter}
+        />
+        <MultiSelectFilter
+          label="Semua Kanal"
+          options={(
+            Object.keys(CHANNEL_LABEL) as FollowUpChannel[]
+          ).map((c) => ({ value: c, label: CHANNEL_LABEL[c] }))}
+          selected={channelFilter}
+          onChange={setChannelFilter}
         />
       </div>
 
@@ -108,7 +163,11 @@ export function FollowUpHistoryPanel() {
             >
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
-                  <MessageCircle size={16} className="text-brand" />
+                  {batch.channel === "auto" ? (
+                    <Bot size={16} className="text-gray-400 dark:text-gray-500" />
+                  ) : (
+                    <MessageCircle size={16} className="text-brand" />
+                  )}
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                       {batch.branch_name}
@@ -119,9 +178,21 @@ export function FollowUpHistoryPanel() {
                     </p>
                   </div>
                 </div>
-                <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
-                  {formatDate(batch.created_at)}
-                </span>
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                  {batch.channel && (
+                    <span
+                      className={cn(
+                        "text-xs font-medium px-2 py-1 rounded",
+                        CHANNEL_STYLE[batch.channel]
+                      )}
+                    >
+                      {CHANNEL_LABEL[batch.channel]}
+                    </span>
+                  )}
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                    {formatDate(batch.created_at)}
+                  </span>
+                </div>
               </div>
 
               <div className="flex flex-wrap gap-1.5 mb-3">

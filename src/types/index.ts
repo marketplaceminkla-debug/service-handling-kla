@@ -44,11 +44,11 @@ export interface ProductCatalogEntryWithBrand extends ProductCatalogEntry {
 export type TicketKategori = "stok" | "user";
 export type TicketStatus =
   | "baru"
-  | "diproses"
-  | "tunggu_sparepart"
-  | "done_service"
+  | "menunggu_part"
+  | "dalam_pengerjaan"
+  | "siap_diambil"
   | "selesai";
-export type FollowUpChannel = "cabang" | "brand";
+export type FollowUpChannel = "cabang" | "brand" | "auto";
 
 export interface ServiceTicket {
   id: string;
@@ -89,7 +89,10 @@ export interface TicketUpdate {
 
 export interface FollowUpHistoryEntry extends TicketUpdate {
   ticket:
-    | (Pick<ServiceTicket, "id" | "no_service" | "serial_number" | "kode_barang"> & {
+    | (Pick<
+        ServiceTicket,
+        "id" | "no_service" | "serial_number" | "kode_barang" | "status"
+      > & {
         branch: Pick<Branch, "id" | "name"> | null;
       })
     | null;
@@ -97,11 +100,21 @@ export interface FollowUpHistoryEntry extends TicketUpdate {
 
 export const STATUS_LABEL: Record<TicketStatus, string> = {
   baru: "Baru",
-  diproses: "Diproses",
-  tunggu_sparepart: "Tunggu Sparepart",
-  done_service: "Done Servis",
+  menunggu_part: "Menunggu part",
+  dalam_pengerjaan: "Dalam pengerjaan",
+  siap_diambil: "Siap diambil",
   selesai: "Selesai",
 };
+
+/** Urutan tampil status: yang paling memalukan di atas. Dipakai buat
+ * mengelompokkan pesan digest aging. */
+export const STATUS_ORDER: TicketStatus[] = [
+  "baru",
+  "dalam_pengerjaan",
+  "menunggu_part",
+  "siap_diambil",
+  "selesai",
+];
 
 export const KATEGORI_LABEL: Record<TicketKategori, string> = {
   stok: "Stok",
