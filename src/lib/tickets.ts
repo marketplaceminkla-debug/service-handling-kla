@@ -11,6 +11,20 @@ import type {
 const STUCK_THRESHOLD_DAYS = 3;
 export const URGENT_AGE_DAYS = 30;
 export const WARNING_AGE_DAYS = 20;
+
+/** Pita umur yang dipakai dashboard: < pantau / pantau–(tindak-1) /
+ * tindak–(eskalasi-1) / >= eskalasi. Ambangnya sengaja dipisah dari
+ * ageLevel() di atas — yang itu cuma mewarnai kolom umur di daftar tiket.
+ * Kalau angka di sini diubah, samakan juga dengan tabel aging_rules,
+ * biar dashboard dan digest harian tidak saling membantah. */
+export const AGE_BANDS = { pantau: 7, tindak: 14, eskalasi: 30 } as const;
+
+export function ageBandIndex(days: number): 0 | 1 | 2 | 3 {
+  if (days >= AGE_BANDS.eskalasi) return 3;
+  if (days >= AGE_BANDS.tindak) return 2;
+  if (days >= AGE_BANDS.pantau) return 1;
+  return 0;
+}
 const TICKET_SELECT =
   "*, branch:branches(id, name, code, wa_number), brand:brands(id, name, wa_number)";
 
@@ -80,7 +94,7 @@ export async function listFollowUpHistory(): Promise<FollowUpHistoryEntry[]> {
   const { data, error } = await supabase
     .from("ticket_updates")
     .select(
-      "*, ticket:service_tickets(id, no_service, serial_number, kode_barang, status, branch:branches(id, name))"
+      "*, ticket:service_tickets(id, no_service, serial_number, kode_barang, status, created_at, reported_by_name, branch:branches(id, name))"
     )
     .order("created_at", { ascending: false })
     .limit(500);

@@ -60,7 +60,42 @@ export function AgingDigestPanel() {
     return (
       <p className="text-sm text-gray-400 dark:text-gray-500">Memuat digest...</p>
     );
-  if (error) return <p className="text-sm text-danger">{error}</p>;
+
+  if (error) {
+    // Penyebab paling umum: migrasi supabase-aging-digest-setup.sql belum
+    // dijalankan, jadi tabelnya memang belum ada. Pesan mentah Postgres
+    // ("could not find the table ... in the schema cache") gak menolong.
+    const tableMissing = /followup_batches/i.test(error);
+    return (
+      <div className="max-w-xl">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+          Digest Harian
+        </h2>
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-brand/40 rounded-xl px-5 py-4">
+          <p className="font-medium text-gray-900 dark:text-gray-100 mb-1">
+            {tableMissing
+              ? "Fitur ini belum disiapkan di database"
+              : "Gagal memuat digest"}
+          </p>
+          {tableMissing ? (
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Jalankan{" "}
+              <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-xs">
+                supabase-aging-digest-setup.sql
+              </code>{" "}
+              di SQL Editor Supabase, lalu muat ulang halaman ini. File-nya
+              aman dijalankan berulang.
+            </p>
+          ) : (
+            <p className="text-sm text-gray-600 dark:text-gray-300">{error}</p>
+          )}
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+            Detail: {error}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

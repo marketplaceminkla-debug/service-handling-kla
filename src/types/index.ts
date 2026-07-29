@@ -91,7 +91,13 @@ export interface FollowUpHistoryEntry extends TicketUpdate {
   ticket:
     | (Pick<
         ServiceTicket,
-        "id" | "no_service" | "serial_number" | "kode_barang" | "status"
+        | "id"
+        | "no_service"
+        | "serial_number"
+        | "kode_barang"
+        | "status"
+        | "created_at"
+        | "reported_by_name"
       > & {
         branch: Pick<Branch, "id" | "name"> | null;
       })
