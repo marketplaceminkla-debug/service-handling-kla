@@ -6,6 +6,7 @@ import {
   Users,
   UploadCloud,
   MessageSquareText,
+  AlarmClock,
 } from "lucide-react";
 import type { Role } from "@/types";
 
@@ -13,6 +14,7 @@ export type PanelKey =
   | "dashboard"
   | "tickets"
   | "upload"
+  | "digest"
   | "followup"
   | "master"
   | "akun";
@@ -41,6 +43,12 @@ export const NAV_ITEMS: NavItem[] = [
     key: "upload",
     label: "Upload Servis",
     icon: UploadCloud,
+    roles: ["super_admin", "admin", "staff"],
+  },
+  {
+    key: "digest",
+    label: "Digest Harian",
+    icon: AlarmClock,
     roles: ["super_admin", "admin", "staff"],
   },
   {

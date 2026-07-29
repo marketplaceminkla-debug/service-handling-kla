@@ -5,18 +5,35 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  * pakai shared secret di header, bukan session Supabase. Perbandingannya
  * panjang-konstan supaya gak bocor lewat timing.
  */
-export function isAuthorized(req: Request): boolean {
-  const expected = process.env.INTERNAL_API_KEY;
-  if (!expected) return false;
-
-  const provided = req.headers.get("x-internal-key");
-  if (!provided || provided.length !== expected.length) return false;
-
+function secretMatches(provided: string | null, expected: string | undefined) {
+  if (!expected || !provided || provided.length !== expected.length) return false;
   let diff = 0;
   for (let i = 0; i < expected.length; i++) {
     diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
   }
   return diff === 0;
+}
+
+export function isAuthorized(req: Request): boolean {
+  return secretMatches(
+    req.headers.get("x-internal-key"),
+    process.env.INTERNAL_API_KEY
+  );
+}
+
+/**
+ * Vercel Cron memanggil route-nya dengan header
+ * `Authorization: Bearer $CRON_SECRET`. Panggilan manual (buat uji coba)
+ * tetap diterima lewat `x-internal-key`.
+ */
+export function isCronAuthorized(req: Request): boolean {
+  const bearer = (req.headers.get("authorization") ?? "").replace(
+    /^Bearer\s+/i,
+    ""
+  );
+  return (
+    secretMatches(bearer, process.env.CRON_SECRET) || isAuthorized(req)
+  );
 }
 
 /** Service-role client: endpoint ini jalan tanpa user, jadi RLS per-cabang

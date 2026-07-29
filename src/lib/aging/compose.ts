@@ -14,6 +14,15 @@ export function escapeMdV2(value: string): string {
   return value.replace(MDV2_SPECIALS, (c) => `\\${c}`);
 }
 
+/** Digest tampil di dalam aplikasi (teks polos, buat disalin), tapi
+ * escaping MarkdownV2 tetap dipertahankan kalau suatu saat dikirim ke
+ * Telegram. */
+export type MessageFormat = "plain" | "markdownv2";
+
+function escaper(format: MessageFormat): (value: string) => string {
+  return format === "markdownv2" ? escapeMdV2 : (v: string) => v;
+}
+
 function statusRank(status: string): number {
   const idx = STATUS_ORDER.indexOf(status as never);
   return idx === -1 ? STATUS_ORDER.length : idx;
@@ -29,12 +38,13 @@ function displayAge(ticket: AgingTicket): number {
 
 function formatTicketLine(
   ticket: AgingTicket,
-  opts: { showBranch: boolean }
+  opts: { showBranch: boolean; format: MessageFormat }
 ): string {
+  const esc = escaper(opts.format);
   const head = [
-    escapeMdV2(ticket.ticket_no),
-    escapeMdV2(ticket.device),
-    opts.showBranch ? escapeMdV2(ticket.branch) : null,
+    esc(ticket.ticket_no),
+    esc(ticket.device),
+    opts.showBranch ? esc(ticket.branch) : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -53,12 +63,12 @@ function formatTicketLine(
   if (ticket.status === "menunggu_part") {
     detail.push(
       ticket.part_eta?.trim()
-        ? `part ETA ${escapeMdV2(ticket.part_eta.trim())}`
+        ? `part ETA ${esc(ticket.part_eta.trim())}`
         : "part ETA belum ada"
     );
   }
 
-  if (ticket.pic?.trim()) detail.push(escapeMdV2(ticket.pic.trim()));
+  if (ticket.pic?.trim()) detail.push(esc(ticket.pic.trim()));
 
   return `• ${head}\n  ${detail.join(" · ")}`;
 }
@@ -78,8 +88,11 @@ function ageRange(tickets: AgingTicket[]): string {
 export function composeAgingMessage(
   group: AgingGroup,
   level: AgingLevel,
-  listUrl?: string
+  opts: { format?: MessageFormat; listUrl?: string } = {}
 ): string {
+  const format = opts.format ?? "plain";
+  const esc = escaper(format);
+  const md = format === "markdownv2";
   const showBranch = level === "escalate";
 
   const allTickets = group.by_status.flatMap((g) => g.tickets);
@@ -88,7 +101,7 @@ export function composeAgingMessage(
   const header =
     level === "escalate"
       ? `🚨 Tiket lewat batas — lintas cabang\n${allTickets.length} tiket, umur ${ageRange(allTickets)}`
-      : `🔧 Tiket perlu ditindak — ${escapeMdV2(group.branch ?? "-")}\n${allTickets.length} tiket, umur ${ageRange(allTickets)}`;
+      : `🔧 Tiket perlu ditindak — ${esc(group.branch ?? "-")}\n${allTickets.length} tiket, umur ${ageRange(allTickets)}`;
 
   const body: string[] = [];
   let written = 0;
@@ -98,7 +111,9 @@ export function composeAgingMessage(
     const sorted = [...allTickets].sort((a, b) => displayAge(b) - displayAge(a));
     const shown = sorted.slice(0, MAX_TICKETS_PER_MESSAGE);
     written = shown.length;
-    body.push(shown.map((t) => formatTicketLine(t, { showBranch })).join("\n"));
+    body.push(
+      shown.map((t) => formatTicketLine(t, { showBranch, format })).join("\n")
+    );
   } else {
     const sortedGroups = [...group.by_status]
       .filter((g) => g.tickets.length > 0)
@@ -117,10 +132,13 @@ export function composeAgingMessage(
       const label = (
         statusGroup.label || STATUS_LABEL[statusGroup.status] || statusGroup.status
       ).toUpperCase();
+      const count = md
+        ? `\\(${statusGroup.tickets.length}\\)`
+        : `(${statusGroup.tickets.length})`;
 
       body.push(
-        `${escapeMdV2(label)} \\(${statusGroup.tickets.length}\\)\n` +
-          shown.map((t) => formatTicketLine(t, { showBranch })).join("\n")
+        `${esc(label)} ${count}\n` +
+          shown.map((t) => formatTicketLine(t, { showBranch, format })).join("\n")
       );
     }
   }
@@ -129,11 +147,11 @@ export function composeAgingMessage(
 
   const remaining = allTickets.length - written;
   if (remaining > 0) {
-    parts.push("", `\\+${remaining} tiket lain, lihat daftar lengkap`);
+    parts.push("", `${md ? "\\+" : "+"}${remaining} tiket lain, lihat daftar lengkap`);
   }
 
-  if (listUrl) {
-    parts.push("", `Buka daftar: ${escapeMdV2(listUrl)}`);
+  if (opts.listUrl) {
+    parts.push("", `Buka daftar: ${esc(opts.listUrl)}`);
   }
 
   return parts.join("\n");
