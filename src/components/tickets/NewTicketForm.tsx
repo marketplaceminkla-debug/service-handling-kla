@@ -8,6 +8,7 @@ import { listBrands } from "@/lib/brands";
 import { createTicket } from "@/lib/tickets";
 import { PosisiUnitSelect } from "@/components/tickets/PosisiUnitSelect";
 import type { Branch, Brand, TicketKategori } from "@/types";
+import { errorMessage } from "@/lib/utils";
 
 export function NewTicketForm({
   onCancel,
@@ -63,7 +64,7 @@ export function NewTicketForm({
       });
       onCreated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menyimpan tiket");
+      setError(errorMessage(err, "Gagal menyimpan tiket"));
     } finally {
       setSubmitting(false);
     }

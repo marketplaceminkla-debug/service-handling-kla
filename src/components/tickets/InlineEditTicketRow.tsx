@@ -11,6 +11,7 @@ import {
   type TicketStatus,
   type TicketWithBranch,
 } from "@/types";
+import { errorMessage } from "@/lib/utils";
 
 export function InlineEditTicketRow({
   ticket,
@@ -59,7 +60,7 @@ export function InlineEditTicketRow({
       });
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menyimpan perubahan");
+      setError(errorMessage(err, "Gagal menyimpan perubahan"));
     } finally {
       setSaving(false);
     }

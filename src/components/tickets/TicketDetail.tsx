@@ -29,7 +29,7 @@ import {
   type TicketUpdate,
   type TicketWithBranch,
 } from "@/types";
-import { cn, formatDate, formatDateOnly } from "@/lib/utils";
+import { cn, errorMessage, formatDate, formatDateOnly } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
   baru: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
@@ -121,7 +121,7 @@ export function TicketDetail({
         setIsEditing(true);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Gagal memuat tiket");
+      setError(errorMessage(e, "Gagal memuat tiket"));
     } finally {
       setLoading(false);
     }
@@ -158,7 +158,7 @@ export function TicketDetail({
       setIsEditing(false);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menyimpan perubahan");
+      setError(errorMessage(err, "Gagal menyimpan perubahan"));
     } finally {
       setSavingEdit(false);
     }
@@ -206,7 +206,7 @@ export function TicketDetail({
       setManualDate("");
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menyimpan follow-up");
+      setError(errorMessage(err, "Gagal menyimpan follow-up"));
     } finally {
       setSubmitting(false);
     }
@@ -235,7 +235,7 @@ export function TicketDetail({
       await load();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Gagal menyimpan perubahan"
+        errorMessage(err, "Gagal menyimpan perubahan")
       );
     } finally {
       setSavingUpdateEdit(false);
@@ -248,7 +248,7 @@ export function TicketDetail({
       await deleteFollowUp(id);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menghapus follow-up");
+      setError(errorMessage(err, "Gagal menghapus follow-up"));
     }
   };
 

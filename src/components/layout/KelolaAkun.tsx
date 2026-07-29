@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { listBranches } from "@/lib/branches";
 import type { Branch, Profile, Role } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, errorMessage } from "@/lib/utils";
 
 export function KelolaAkun() {
   const { session } = useAuth();
@@ -244,7 +244,7 @@ function CreateUserForm({
       if (!res.ok) throw new Error(json.error || "Gagal membuat akun");
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal membuat akun");
+      setError(errorMessage(err, "Gagal membuat akun"));
     } finally {
       setSubmitting(false);
     }

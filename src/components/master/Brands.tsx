@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus } from "lucide-react";
 import { createBrand, listBrands, updateBrand } from "@/lib/brands";
 import type { Brand } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, errorMessage } from "@/lib/utils";
 
 export function BrandsPanel() {
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -42,7 +42,7 @@ export function BrandsPanel() {
       setShowForm(false);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menambah brand");
+      setError(errorMessage(err, "Gagal menambah brand"));
     } finally {
       setSubmitting(false);
     }
@@ -53,7 +53,7 @@ export function BrandsPanel() {
       await updateBrand(b.id, { is_active: !b.is_active });
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal mengubah brand");
+      setError(errorMessage(err, "Gagal mengubah brand"));
     }
   };
 
@@ -77,7 +77,7 @@ export function BrandsPanel() {
       setEditingId(null);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menyimpan perubahan");
+      setError(errorMessage(err, "Gagal menyimpan perubahan"));
     } finally {
       setSavingEdit(false);
     }

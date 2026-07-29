@@ -9,6 +9,7 @@ import {
   waLink,
 } from "@/lib/tickets";
 import type { TicketWithBranch } from "@/types";
+import { errorMessage } from "@/lib/utils";
 
 function commonValue<T>(values: (T | null)[]): T | null {
   if (values.length === 0) return null;
@@ -76,7 +77,7 @@ export function BulkFollowUpPanel({
         onDone();
       }, 1200);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menyalin teks");
+      setError(errorMessage(err, "Gagal menyalin teks"));
       setSubmitting(false);
     }
   };
@@ -104,7 +105,7 @@ export function BulkFollowUpPanel({
       onDone();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Gagal menyimpan follow-up"
+        errorMessage(err, "Gagal menyimpan follow-up")
       );
       setSubmitting(false);
     }
