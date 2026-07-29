@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus } from "lucide-react";
 import { createBranch, listBranches, updateBranch } from "@/lib/branches";
 import type { Branch } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, errorMessage } from "@/lib/utils";
 
 export function BranchesPanel() {
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -45,7 +45,7 @@ export function BranchesPanel() {
       setShowForm(false);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menambah cabang");
+      setError(errorMessage(err, "Gagal menambah cabang"));
     } finally {
       setSubmitting(false);
     }
@@ -56,7 +56,7 @@ export function BranchesPanel() {
       await updateBranch(b.id, { is_active: !b.is_active });
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal mengubah cabang");
+      setError(errorMessage(err, "Gagal mengubah cabang"));
     }
   };
 
@@ -82,7 +82,7 @@ export function BranchesPanel() {
       setEditingId(null);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menyimpan perubahan");
+      setError(errorMessage(err, "Gagal menyimpan perubahan"));
     } finally {
       setSavingEdit(false);
     }

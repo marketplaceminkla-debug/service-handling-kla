@@ -10,7 +10,7 @@ import {
   type ParsedTicketRow,
 } from "@/lib/ticketImport";
 import { KATEGORI_LABEL, type TicketKategori } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, errorMessage } from "@/lib/utils";
 
 export function UploadExcel() {
   const { profile } = useAuth();
@@ -42,7 +42,7 @@ export function UploadExcel() {
       }
       setRows(parsed);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal membaca file Excel");
+      setError(errorMessage(err, "Gagal membaca file Excel"));
       setRows([]);
     } finally {
       setParsing(false);
@@ -61,7 +61,7 @@ export function UploadExcel() {
       setRows([]);
       setFileName(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal import data");
+      setError(errorMessage(err, "Gagal import data"));
     } finally {
       setImporting(false);
     }

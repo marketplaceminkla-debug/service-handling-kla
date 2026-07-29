@@ -16,7 +16,7 @@ import {
   type ParsedCatalogRow,
 } from "@/lib/productCatalogImport";
 import type { Brand, ProductCatalogEntryWithBrand } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, errorMessage } from "@/lib/utils";
 
 export function ProductCatalogPanel() {
   const [items, setItems] = useState<ProductCatalogEntryWithBrand[]>([]);
@@ -91,7 +91,7 @@ export function ProductCatalogPanel() {
       setShowForm(false);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menambah data barang");
+      setError(errorMessage(err, "Gagal menambah data barang"));
     } finally {
       setSubmitting(false);
     }
@@ -121,7 +121,7 @@ export function ProductCatalogPanel() {
       setEditingId(null);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menyimpan perubahan");
+      setError(errorMessage(err, "Gagal menyimpan perubahan"));
     } finally {
       setSavingEdit(false);
     }
@@ -133,7 +133,7 @@ export function ProductCatalogPanel() {
       await deleteProductCatalogEntry(id);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menghapus data");
+      setError(errorMessage(err, "Gagal menghapus data"));
     }
   };
 
@@ -158,7 +158,7 @@ export function ProductCatalogPanel() {
       setImportRows(parsed);
     } catch (err) {
       setImportError(
-        err instanceof Error ? err.message : "Gagal membaca file Excel"
+        errorMessage(err, "Gagal membaca file Excel")
       );
       setImportRows([]);
     } finally {
@@ -176,7 +176,7 @@ export function ProductCatalogPanel() {
       setImportFileName(null);
       load();
     } catch (err) {
-      setImportError(err instanceof Error ? err.message : "Gagal import data");
+      setImportError(errorMessage(err, "Gagal import data"));
     } finally {
       setImporting(false);
     }

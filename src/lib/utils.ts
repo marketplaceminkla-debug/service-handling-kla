@@ -5,6 +5,27 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Ambil pesan yang bisa dibaca dari apa pun yang ke-throw.
+ *
+ * Supabase melempar PostgrestError — objek biasa, BUKAN instance Error —
+ * jadi pengecekan `err instanceof Error` selalu meleset dan pesan asli
+ * dari database ("violates check constraint ...") ketelan diganti teks
+ * generik. Itu bikin kegagalan yang sebenarnya jelas jadi sulit dilacak.
+ */
+export function errorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message) return err.message;
+  if (err && typeof err === "object") {
+    const e = err as { message?: unknown; details?: unknown; hint?: unknown };
+    const parts = [e.message, e.details, e.hint]
+      .filter((p): p is string => typeof p === "string" && p.trim() !== "")
+      .join(" — ");
+    if (parts) return parts;
+  }
+  if (typeof err === "string" && err.trim()) return err;
+  return fallback;
+}
+
 export function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("id-ID", {
     day: "2-digit",
