@@ -86,19 +86,43 @@ function isBlank(value: string | null | undefined): boolean {
   return !v || v === "-";
 }
 
+export type DraftTicket = Pick<
+  ServiceTicket,
+  "no_service" | "serial_number" | "kode_barang" | "posisi_unit"
+> & {
+  branch: { name: string } | null;
+};
+
+/**
+ * Draft follow-up buat disalin/dikirim. Cabang ikut ditulis per baris
+ * karena follow-up ke brand isinya bisa lintas cabang — tanpa itu, brand
+ * gak tahu unitnya nyangkut di cabang mana.
+ */
 export function buildPosisiUnitDraftMessage(
-  branchName: string,
-  items: Pick<ServiceTicket, "no_service" | "serial_number" | "kode_barang">[]
+  target: FollowUpChannel,
+  targetName: string,
+  items: DraftTicket[]
 ) {
   const list = items
     .map((t, i) => {
-      const parts = [t.no_service];
-      if (!isBlank(t.kode_barang)) parts.push(t.kode_barang.trim());
-      if (!isBlank(t.serial_number)) parts.push(t.serial_number.trim());
-      return `${i + 1}. ${parts.join(" - ")}`;
+      const head = [t.branch?.name, t.no_service].filter(Boolean).join(" · ");
+      const lines = [`${i + 1}. ${head}`];
+      if (!isBlank(t.kode_barang)) lines.push(`   ${t.kode_barang.trim()}`);
+      if (!isBlank(t.serial_number)) lines.push(`   SN ${t.serial_number.trim()}`);
+      // Posisi kosong ditulis eksplisit — itu justru yang mau ditanyakan.
+      lines.push(
+        `   Posisi: ${isBlank(t.posisi_unit) ? "belum diisi" : t.posisi_unit!.trim()}`
+      );
+      return lines.join("\n");
     })
-    .join("\n");
-  return `Halo ${branchName}, tolong dibantu update posisi unit dibawah ini:\n\n${list}`;
+    .join("\n\n");
+
+  const greeting =
+    target === "brand"
+      ? `Halo Tim ${targetName}, mohon dibantu cek posisi unit servis berikut:`
+      : `Halo ${targetName}, tolong dibantu update posisi unit dibawah ini:`;
+
+  return `${greeting}\n\n${list}`;
 }
 
 /** Riwayat follow-up lintas tiket buat halaman History Follow Up — beda sama
