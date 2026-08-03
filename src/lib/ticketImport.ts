@@ -21,6 +21,10 @@ export interface ImportResult {
   updated: number;
   skipped: { no_service: string; reason: string }[];
   branchesCreated: string[];
+  /** Id tiket yang baru dibuat, buat tombol "Batalkan Import" — supaya
+   * pembatalan cuma menyentuh baris dari import ini, bukan menebak-nebak
+   * lewat tanggal. */
+  createdIds: string[];
 }
 
 type ColumnKey = keyof Omit<ParsedTicketRow, never>;
@@ -226,7 +230,14 @@ export async function importTickets(
   const uniqueRows = Array.from(byNoService.values());
 
   if (uniqueRows.length === 0) {
-    return { totalRows: rows.length, created: 0, updated: 0, skipped, branchesCreated: [] };
+    return {
+      totalRows: rows.length,
+      created: 0,
+      updated: 0,
+      skipped,
+      branchesCreated: [],
+      createdIds: [],
+    };
   }
 
   const branchNames = Array.from(
@@ -302,11 +313,56 @@ export async function importTickets(
   }
 
   let created = 0;
+  let createdIds: string[] = [];
   if (toInsert.length > 0) {
-    const { error } = await supabase.from("service_tickets").insert(toInsert);
+    const { data, error } = await supabase
+      .from("service_tickets")
+      .insert(toInsert)
+      .select("id");
     if (error) throw error;
+    createdIds = (data ?? []).map((r) => r.id as string);
     created = toInsert.length;
   }
 
-  return { totalRows: rows.length, created, updated: 0, skipped, branchesCreated };
+  return {
+    totalRows: rows.length,
+    created,
+    updated: 0,
+    skipped,
+    branchesCreated,
+    createdIds,
+  };
+}
+
+/**
+ * Batalkan import: hapus tiket yang baru saja dibuat.
+ *
+ * Sengaja hanya menghapus tiket yang belum pernah disentuh sejak diimpor
+ * (tidak punya riwayat follow-up), supaya pembatalan tidak ikut membuang
+ * pekerjaan orang lain kalau ada yang sudah terlanjur menindaklanjuti.
+ */
+export async function undoImport(ticketIds: string[]): Promise<{
+  deleted: number;
+  keptBecauseTouched: number;
+}> {
+  if (ticketIds.length === 0) return { deleted: 0, keptBecauseTouched: 0 };
+
+  const { data: touched, error: touchedError } = await supabase
+    .from("ticket_updates")
+    .select("ticket_id")
+    .in("ticket_id", ticketIds);
+  if (touchedError) throw touchedError;
+
+  const touchedIds = new Set((touched ?? []).map((r) => r.ticket_id as string));
+  const deletable = ticketIds.filter((id) => !touchedIds.has(id));
+
+  if (deletable.length > 0) {
+    const { error } = await supabase
+      .from("service_tickets")
+      .delete()
+      .in("id", deletable);
+    if (error) throw error;
+  }
+
+  return { deleted: deletable.length, keptBecauseTouched: touchedIds.size };
 }

@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { UploadCloud, CheckCircle2, AlertTriangle } from "lucide-react";
+import {
+  UploadCloud,
+  CheckCircle2,
+  AlertTriangle,
+  Undo2,
+  X,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import {
   importTickets,
   parseExcelFile,
+  undoImport,
   type ImportResult,
   type ParsedTicketRow,
 } from "@/lib/ticketImport";
@@ -21,6 +28,9 @@ export function UploadExcel() {
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [undoing, setUndoing] = useState(false);
+  const [undoNote, setUndoNote] = useState<string | null>(null);
 
   const switchKategori = (next: TicketKategori) => {
     setKategori(next);
@@ -28,6 +38,7 @@ export function UploadExcel() {
     setFileName(null);
     setError(null);
     setResult(null);
+    setUndoNote(null);
   };
 
   const handleFile = async (file: File) => {
@@ -50,8 +61,10 @@ export function UploadExcel() {
   };
 
   const handleImport = async () => {
+    setConfirming(false);
     setImporting(true);
     setError(null);
+    setUndoNote(null);
     try {
       const res = await importTickets(kategori, rows, {
         id: profile?.id ?? null,
@@ -64,6 +77,32 @@ export function UploadExcel() {
       setError(errorMessage(err, "Gagal import data"));
     } finally {
       setImporting(false);
+    }
+  };
+
+  const handleUndo = async () => {
+    if (!result?.createdIds.length) return;
+    if (
+      !confirm(
+        `Hapus ${result.createdIds.length} tiket yang baru saja diimpor? Tindakan ini tidak bisa dibatalkan lagi.`
+      )
+    )
+      return;
+
+    setUndoing(true);
+    setError(null);
+    try {
+      const res = await undoImport(result.createdIds);
+      setUndoNote(
+        res.keptBecauseTouched > 0
+          ? `${res.deleted} tiket dihapus. ${res.keptBecauseTouched} tiket dipertahankan karena sudah ada follow-up-nya.`
+          : `${res.deleted} tiket berhasil dihapus.`
+      );
+      setResult(null);
+    } catch (err) {
+      setError(errorMessage(err, "Gagal membatalkan import"));
+    } finally {
+      setUndoing(false);
     }
   };
 
@@ -155,9 +194,92 @@ export function UploadExcel() {
                 </ul>
               </div>
             )}
+
+            {result.createdIds.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-green-200 dark:border-green-900/50">
+                <p className="text-xs text-green-800/80 dark:text-green-300/70 mb-2">
+                  Salah file? Batalkan selagi tombol ini masih ada — begitu
+                  halaman ditutup, pembatalan harus lewat hapus tiket satu per
+                  satu.
+                </p>
+                <button
+                  onClick={handleUndo}
+                  disabled={undoing}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-red-700 dark:text-red-300 border border-red-300 dark:border-red-900/60 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-60"
+                >
+                  <Undo2 size={14} />
+                  {undoing
+                    ? "Membatalkan..."
+                    : `Batalkan Import (${result.createdIds.length} tiket)`}
+                </button>
+              </div>
+            )}
           </div>
         )}
+
+        {undoNote && (
+          <p className="mt-4 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3">
+            {undoNote}
+          </p>
+        )}
       </div>
+
+      {confirming && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setConfirming(false)}
+        >
+          <div
+            className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                Yakin proses import?
+              </h3>
+              <button
+                onClick={() => setConfirming(false)}
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-5">
+              <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1.5 mb-4">
+                <li>
+                  File: <strong>{fileName ?? "-"}</strong>
+                </li>
+                <li>
+                  Kategori: <strong>Servis {KATEGORI_LABEL[kategori]}</strong>
+                </li>
+                <li>
+                  <strong>{rows.length} baris</strong> akan diproses jadi tiket
+                  baru
+                </li>
+              </ul>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                No. Service yang sudah ada di database akan dilewati, bukan
+                ditimpa. Kalau ternyata salah file, masih ada tombol Batalkan
+                Import setelah ini.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setConfirming(false)}
+                  className="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleImport}
+                  className="px-5 py-2.5 text-sm font-semibold text-gray-900 bg-brand rounded-lg hover:brightness-95"
+                >
+                  Ya, proses
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {rows.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -166,7 +288,7 @@ export function UploadExcel() {
               Preview ({rows.length} baris)
             </h3>
             <button
-              onClick={handleImport}
+              onClick={() => setConfirming(true)}
               disabled={importing}
               className={cn(
                 "px-5 py-2.5 text-sm font-semibold text-gray-900 bg-brand rounded-lg hover:brightness-95",
