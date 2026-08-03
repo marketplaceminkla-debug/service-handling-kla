@@ -338,6 +338,29 @@ export async function importTickets(
   };
 }
 
+/** Daftar id dipotong-potong sebelum dikirim: `.in()` masuk ke query
+ * string, dan ratusan uuid sekaligus melewati batas panjang URL. */
+const ID_CHUNK = 150;
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+async function findTouchedTicketIds(ids: string[]): Promise<Set<string>> {
+  const touched = new Set<string>();
+  for (const part of chunk(ids, ID_CHUNK)) {
+    const { data, error } = await supabase
+      .from("ticket_updates")
+      .select("ticket_id")
+      .in("ticket_id", part);
+    if (error) throw error;
+    (data ?? []).forEach((r) => touched.add(r.ticket_id as string));
+  }
+  return touched;
+}
+
 export interface UndoableImportTicket {
   id: string;
   no_service: string;
@@ -369,20 +392,8 @@ export interface UndoableImportBatch {
  * created_at TIDAK dipakai karena sengaja dimundurkan sesuai umur tiket
  * saat impor; yang menandai waktu impor adalah updated_at.
  */
-export async function listUndoableImports(
-  limit = 400
-): Promise<UndoableImportBatch[]> {
-  const { data, error } = await supabase
-    .from("service_tickets")
-    .select(
-      "id, no_service, kode_barang, serial_number, updated_at, status, posisi_unit, branch:branches(name)"
-    )
-    .eq("status", "baru")
-    .order("updated_at", { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-
-  const rows = (data ?? []) as unknown as {
+export async function listUndoableImports(): Promise<UndoableImportBatch[]> {
+  interface Row {
     id: string;
     no_service: string;
     kode_barang: string;
@@ -390,22 +401,35 @@ export async function listUndoableImports(
     updated_at: string;
     posisi_unit: string | null;
     branch: { name: string } | null;
-  }[];
+  }
+
+  // Diambil bertahap: Supabase membatasi jumlah baris per permintaan, dan
+  // satu import bisa jauh melewati batas itu. Tanpa ini daftarnya terpotong
+  // diam-diam, dan orang mengira sisanya sudah terhapus.
+  const PAGE = 1000;
+  const rows: Row[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from("service_tickets")
+      .select(
+        "id, no_service, kode_barang, serial_number, updated_at, status, posisi_unit, branch:branches(name)"
+      )
+      .eq("status", "baru")
+      .order("updated_at", { ascending: false })
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+
+    const page = (data ?? []) as unknown as Row[];
+    rows.push(...page);
+    if (page.length < PAGE) break;
+  }
 
   const candidates = rows.filter(
     (r) => (r.posisi_unit ?? "").trim().toUpperCase() === "CABANG"
   );
   if (candidates.length === 0) return [];
 
-  const { data: touched, error: touchedError } = await supabase
-    .from("ticket_updates")
-    .select("ticket_id")
-    .in(
-      "ticket_id",
-      candidates.map((c) => c.id)
-    );
-  if (touchedError) throw touchedError;
-  const touchedIds = new Set((touched ?? []).map((r) => r.ticket_id as string));
+  const touchedIds = await findTouchedTicketIds(candidates.map((c) => c.id));
 
   const groups = new Map<string, UndoableImportBatch>();
   for (const r of candidates) {
@@ -450,20 +474,14 @@ export async function undoImport(ticketIds: string[]): Promise<{
 }> {
   if (ticketIds.length === 0) return { deleted: 0, keptBecauseTouched: 0 };
 
-  const { data: touched, error: touchedError } = await supabase
-    .from("ticket_updates")
-    .select("ticket_id")
-    .in("ticket_id", ticketIds);
-  if (touchedError) throw touchedError;
-
-  const touchedIds = new Set((touched ?? []).map((r) => r.ticket_id as string));
+  const touchedIds = await findTouchedTicketIds(ticketIds);
   const deletable = ticketIds.filter((id) => !touchedIds.has(id));
 
-  if (deletable.length > 0) {
+  for (const part of chunk(deletable, ID_CHUNK)) {
     const { error } = await supabase
       .from("service_tickets")
       .delete()
-      .in("id", deletable);
+      .in("id", part);
     if (error) throw error;
   }
 

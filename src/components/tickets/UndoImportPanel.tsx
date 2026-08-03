@@ -17,6 +17,8 @@ export function UndoImportPanel() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [progress, setProgress] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -72,6 +74,61 @@ export function UndoImportPanel() {
     [batches]
   );
 
+  const selectedIds = useMemo(
+    () =>
+      batches
+        .filter((b) => selectedKeys.has(b.key))
+        .flatMap((b) => b.tickets.map((t) => t.id))
+        .filter((id) => !excluded.has(id)),
+    [batches, selectedKeys, excluded]
+  );
+
+  const toggleGroup = (key: string) => {
+    setSelectedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const allSelected = batches.length > 0 && selectedKeys.size === batches.length;
+
+  const removeSelected = async () => {
+    if (selectedIds.length === 0) return;
+    if (
+      !confirm(
+        `Hapus ${selectedIds.length} tiket dari ${selectedKeys.size} kali import?\n\nTindakan ini TIDAK BISA dibatalkan. Pastikan daftarnya sudah kamu periksa.`
+      )
+    )
+      return;
+    if (
+      !confirm(
+        `Konfirmasi sekali lagi: ${selectedIds.length} tiket akan dihapus permanen.`
+      )
+    )
+      return;
+
+    setBusyKey("__bulk__");
+    setError(null);
+    setProgress(`Menghapus ${selectedIds.length} tiket...`);
+    try {
+      const res = await undoImport(selectedIds);
+      setNote(
+        res.keptBecauseTouched > 0
+          ? `${res.deleted} tiket dihapus. ${res.keptBecauseTouched} dipertahankan karena sudah ada follow-up-nya.`
+          : `${res.deleted} tiket berhasil dihapus.`
+      );
+      setSelectedKeys(new Set());
+      load();
+    } catch (err) {
+      setError(errorMessage(err, "Gagal menghapus tiket"));
+    } finally {
+      setBusyKey(null);
+      setProgress(null);
+    }
+  };
+
   if (loading)
     return (
       <p className="text-sm text-gray-400 dark:text-gray-500">
@@ -112,6 +169,43 @@ export function UndoImportPanel() {
         </p>
       </div>
 
+      {batches.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 px-5 py-3 border-b border-gray-100 dark:border-gray-700">
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={() =>
+                setSelectedKeys(
+                  allSelected ? new Set() : new Set(batches.map((b) => b.key))
+                )
+              }
+              className="rounded border-gray-300 dark:border-gray-600"
+            />
+            Pilih semua kelompok
+          </label>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {selectedIds.length} tiket terpilih
+          </span>
+          <button
+            onClick={removeSelected}
+            disabled={selectedIds.length === 0 || busyKey !== null}
+            className="ml-auto flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-40"
+          >
+            <Trash2 size={13} />
+            {busyKey === "__bulk__"
+              ? "Menghapus..."
+              : `Hapus ${selectedIds.length} Tiket Terpilih`}
+          </button>
+        </div>
+      )}
+
+      {progress && (
+        <p className="mx-5 mt-4 text-sm text-gray-600 dark:text-gray-300">
+          {progress}
+        </p>
+      )}
+
       {error && (
         <p className="mx-5 mt-4 text-sm text-danger bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900/50 rounded-lg px-3 py-2">
           {error}
@@ -135,6 +229,12 @@ export function UndoImportPanel() {
             return (
               <div key={batch.key}>
                 <div className="flex items-center gap-3 px-5 py-3.5">
+                  <input
+                    type="checkbox"
+                    checked={selectedKeys.has(batch.key)}
+                    onChange={() => toggleGroup(batch.key)}
+                    className="rounded border-gray-300 dark:border-gray-600 shrink-0"
+                  />
                   <button
                     onClick={() => setExpanded(isOpen ? null : batch.key)}
                     className="flex items-center gap-3 flex-1 min-w-0 text-left"
