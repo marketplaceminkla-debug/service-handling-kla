@@ -224,6 +224,10 @@ export async function importTickets(
   reportedBy: { id: string | null; name: string | null }
 ): Promise<ImportResult> {
   const skipped: ImportResult["skipped"] = [];
+  /** Satu cap waktu untuk seluruh batch, bukan per baris — supaya tiket
+   * dari import yang sama bisa dikenali sebagai satu kelompok waktu
+   * dibatalkan belakangan. */
+  const importedAt = new Date().toISOString();
 
   const byNoService = new Map<string, ParsedTicketRow>();
   rows.forEach((r) => byNoService.set(r.no_service.trim(), r));
@@ -291,7 +295,7 @@ export async function importTickets(
       posisi_unit: "CABANG",
       estimasi: normalizeOptional(row.estimasi),
       keterangan: normalizeOptional(row.keterangan),
-      updated_at: new Date().toISOString(),
+      updated_at: importedAt,
     };
     const createdAt = createdAtFromLamaHari(row.lama_hari);
     if (createdAt) fields.created_at = createdAt;
@@ -332,6 +336,105 @@ export async function importTickets(
     branchesCreated,
     createdIds,
   };
+}
+
+export interface UndoableImportTicket {
+  id: string;
+  no_service: string;
+  kode_barang: string;
+  serial_number: string;
+  branch_name: string;
+  updated_at: string;
+}
+
+export interface UndoableImportBatch {
+  /** Waktu impor, dibulatkan ke menit — jadi kunci pengelompokan. */
+  key: string;
+  importedAt: string;
+  tickets: UndoableImportTicket[];
+  branches: string[];
+}
+
+/**
+ * Cari tiket yang kemungkinan besar hasil import dan belum tersentuh,
+ * dikelompokkan per waktu impor.
+ *
+ * Ini penyimpulan, bukan kepastian: tidak ada kolom yang menandai asal
+ * sebuah tiket, jadi penandanya adalah kombinasi status 'baru', posisi
+ * 'CABANG' (dua-duanya selalu disetel importer), dan belum punya
+ * follow-up. Tiket yang dibuat manual dengan kombinasi yang sama akan
+ * ikut terjaring — karena itu daftarnya ditampilkan lengkap supaya bisa
+ * diperiksa dulu sebelum dihapus.
+ *
+ * created_at TIDAK dipakai karena sengaja dimundurkan sesuai umur tiket
+ * saat impor; yang menandai waktu impor adalah updated_at.
+ */
+export async function listUndoableImports(
+  limit = 400
+): Promise<UndoableImportBatch[]> {
+  const { data, error } = await supabase
+    .from("service_tickets")
+    .select(
+      "id, no_service, kode_barang, serial_number, updated_at, status, posisi_unit, branch:branches(name)"
+    )
+    .eq("status", "baru")
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+
+  const rows = (data ?? []) as unknown as {
+    id: string;
+    no_service: string;
+    kode_barang: string;
+    serial_number: string;
+    updated_at: string;
+    posisi_unit: string | null;
+    branch: { name: string } | null;
+  }[];
+
+  const candidates = rows.filter(
+    (r) => (r.posisi_unit ?? "").trim().toUpperCase() === "CABANG"
+  );
+  if (candidates.length === 0) return [];
+
+  const { data: touched, error: touchedError } = await supabase
+    .from("ticket_updates")
+    .select("ticket_id")
+    .in(
+      "ticket_id",
+      candidates.map((c) => c.id)
+    );
+  if (touchedError) throw touchedError;
+  const touchedIds = new Set((touched ?? []).map((r) => r.ticket_id as string));
+
+  const groups = new Map<string, UndoableImportBatch>();
+  for (const r of candidates) {
+    if (touchedIds.has(r.id)) continue;
+    const key = r.updated_at.slice(0, 16); // sampai menit
+    if (!groups.has(key)) {
+      groups.set(key, {
+        key,
+        importedAt: r.updated_at,
+        tickets: [],
+        branches: [],
+      });
+    }
+    const g = groups.get(key)!;
+    const branchName = r.branch?.name ?? "-";
+    g.tickets.push({
+      id: r.id,
+      no_service: r.no_service,
+      kode_barang: r.kode_barang,
+      serial_number: r.serial_number,
+      branch_name: branchName,
+      updated_at: r.updated_at,
+    });
+    if (!g.branches.includes(branchName)) g.branches.push(branchName);
+  }
+
+  return Array.from(groups.values()).sort((a, b) =>
+    a.importedAt < b.importedAt ? 1 : -1
+  );
 }
 
 /**

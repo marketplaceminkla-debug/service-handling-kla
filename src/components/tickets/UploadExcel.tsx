@@ -16,6 +16,7 @@ import {
   type ImportResult,
   type ParsedTicketRow,
 } from "@/lib/ticketImport";
+import { UndoImportPanel } from "@/components/tickets/UndoImportPanel";
 import { KATEGORI_LABEL, type TicketKategori } from "@/types";
 import { cn, errorMessage } from "@/lib/utils";
 
@@ -347,6 +348,12 @@ export function UploadExcel() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {rows.length === 0 && (
+        <div className="mt-6">
+          <UndoImportPanel key={undoNote ?? result?.createdIds.length ?? "idle"} />
         </div>
       )}
     </div>
